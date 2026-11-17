@@ -1,0 +1,1367 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VIA72 – PCB nacional com laudo</title>
+<meta name="description" content="Fabricação de placas de circuito impresso de 1 a 4 camadas no Brasil, com nota fiscal, DFM e laudo de continuidade, a partir de 72 horas.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Crect width=%27100%27 height=%27100%27 rx=%2722%27 fill=%27%230F5B4A%27/%3E%3Cpolyline points=%2726,28 68,28 68,44 40,72%27 fill=%27none%27 stroke=%27%23C8743A%27 stroke-width=%279%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27/%3E%3Ccircle cx=%2726%27 cy=%2728%27 r=%2712%27 fill=%27%23C8743A%27/%3E%3Ccircle cx=%2726%27 cy=%2728%27 r=%275%27 fill=%27%230F5B4A%27/%3E%3Ccircle cx=%2740%27 cy=%2774%27 r=%2712%27 fill=%27%23C8743A%27/%3E%3Ccircle cx=%2740%27 cy=%2774%27 r=%275%27 fill=%27%230F5B4A%27/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout: faixa escura de abertura com trilhas sendo roteadas; o resto em grade clara, com o leitor de Gerber como peça central. */
+:root{
+  --mascara:#0F5B4A; --trilha:#2E8B6F; --cobre:#C8743A; --carbono:#10201C; --fibra:#EEF5F2;
+  --bg:#FFFFFF; --bg-alt:#EEF5F2; --ink:#10201C; --muted:#56655F; --line:#D6E4DE; --card:#FFFFFF;
+  --accent:#0F5B4A; --accent-ink:#FFFFFF; --hi:#C8743A; --ok:#1F8A5B; --warn:#B4641C; --bad:#B4441C;
+  --f-display:"JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --f-body:"Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --r:14px; color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){ --bg:#0D1916; --bg-alt:#13231F; --ink:#E6F0EC; --muted:#9DB3AA; --line:#25403A; --card:#142520; --accent:#2E8B6F; --accent-ink:#FFFFFF; --ok:#4CC38A; --warn:#E9A25F; --bad:#F07F5A; color-scheme: dark; }
+}
+:root[data-theme="dark"]{ --bg:#0D1916; --bg-alt:#13231F; --ink:#E6F0EC; --muted:#9DB3AA; --line:#25403A; --card:#142520; --accent:#2E8B6F; --accent-ink:#FFFFFF; --ok:#4CC38A; --warn:#E9A25F; --bad:#F07F5A; color-scheme: dark; }
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
+a{color:var(--accent)}
+:focus-visible{outline:3px solid var(--hi);outline-offset:2px;border-radius:6px}
+h1,h2,h3{font-family:var(--f-display);line-height:1.12;text-wrap:balance;margin:0;letter-spacing:-.02em}
+h2{font-size:clamp(1.6rem,3vw,2.25rem);font-weight:800}
+h3{font-size:1.05rem;font-weight:700}
+p{margin:0}
+.wrap{max-width:1180px;margin:0 auto;padding:0 clamp(16px,4vw,32px)}
+.num{font-variant-numeric:tabular-nums}
+.kicker{font-family:var(--f-display);font-weight:700;font-size:.76rem;letter-spacing:.12em;text-transform:uppercase;color:var(--cobre)}
+.lead{color:var(--muted);max-width:64ch;font-size:1.04rem}
+section{padding:clamp(56px,8vw,96px) 0}
+.sec-head{display:grid;gap:12px;margin-bottom:34px}
+
+header.top{position:sticky;top:0;z-index:20;background:rgba(16,32,28,.94);backdrop-filter:blur(8px);color:#fff}
+.top .wrap{display:flex;align-items:center;gap:24px;height:64px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:#fff}
+.brand svg{width:34px;height:34px}
+.brand b{font-family:var(--f-display);font-weight:800;font-size:1.35rem;letter-spacing:-.02em}
+.brand b span{color:var(--cobre)}
+nav.main{display:flex;gap:22px;margin-left:auto}
+nav.main a{color:#CFE3DC;text-decoration:none;font-size:.92rem}
+nav.main a:hover{color:#fff}
+.btn{display:inline-flex;align-items:center;gap:8px;border:0;cursor:pointer;font-family:var(--f-display);font-weight:700;font-size:.92rem;padding:12px 20px;border-radius:10px;text-decoration:none;transition:transform .15s ease}
+.btn:hover{transform:translateY(-1px)}
+.btn:disabled{opacity:.6;cursor:wait;transform:none}
+.btn-cu{background:var(--cobre);color:#fff}
+.btn-ghost{background:transparent;color:#fff;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.35)}
+.btn-primary{background:var(--accent);color:var(--accent-ink)}
+@media (max-width:880px){nav.main{display:none}.top .btn{margin-left:auto}}
+
+.hero{background:var(--carbono);color:#fff;padding:56px 0 40px;overflow:hidden}
+.hero .wrap{display:grid;grid-template-columns:1.05fr 1fr;gap:40px;align-items:center}
+.hero h1{font-size:clamp(2.1rem,4.8vw,3.6rem);font-weight:800}
+.hero h1 em{font-style:normal;color:var(--cobre)}
+.hero .lead{color:#BFD6CD;margin-top:18px}
+.hero .ctas{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px}
+.specs{display:flex;flex-wrap:wrap;gap:10px;margin-top:30px}
+.spec{border:1px solid rgba(255,255,255,.16);border-radius:10px;padding:8px 12px;font-size:.8rem;color:#CFE3DC}
+.spec b{display:block;font-family:var(--f-display);font-size:1rem;color:#fff}
+.stage{position:relative;aspect-ratio:5/4;width:100%;max-width:560px;justify-self:center;border-radius:16px;overflow:hidden;background:var(--mascara)}
+#route{width:100%;height:100%;display:block}
+.hud{position:absolute;left:14px;right:14px;bottom:10px;display:flex;justify-content:space-between;font-family:var(--f-display);font-size:.76rem;color:#CFE3DC}
+.hud b{color:#F0B184}
+@media (max-width:880px){.hero .wrap{grid-template-columns:1fr}}
+
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.step{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:24px;display:grid;gap:10px}
+.step .n{font-family:var(--f-display);font-weight:800;font-size:2rem;color:var(--trilha);line-height:1}
+.step p{color:var(--muted)}
+@media (max-width:760px){.steps{grid-template-columns:1fr}}
+
+#orcamento{background:var(--bg-alt)}
+.calc{display:grid;grid-template-columns:1.35fr .85fr;gap:22px;align-items:start}
+@media (max-width:960px){.calc{grid-template-columns:1fr}}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:24px;min-width:0}
+.drop{border:2px dashed var(--line);border-radius:14px;padding:18px;display:flex;gap:14px;align-items:center;cursor:pointer;transition:border-color .15s;position:relative}
+.drop:hover,.drop.over{border-color:var(--accent)}
+.drop svg{flex:none;width:42px;height:42px}
+.drop strong{font-family:var(--f-display);display:block;font-size:.95rem}
+.drop small{color:var(--muted)}
+.drop input{position:absolute;width:1px;height:1px;opacity:0}
+.filemeta{font-size:.85rem;color:var(--ok);margin-top:8px;min-height:1.3em}
+.filemeta.err{color:var(--bad)}
+.viewer{position:relative;height:380px;border-radius:14px;overflow:hidden;background:#0B1714;margin-top:12px;touch-action:none}
+.viewer canvas{display:block;width:100%;height:100%;cursor:grab}
+.viewer canvas:active{cursor:grabbing}
+.vbadge{position:absolute;top:12px;left:12px;background:rgba(15,91,74,.9);color:#fff;font:600 .74rem var(--f-body);padding:4px 10px;border-radius:999px;max-width:55%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vtools{position:absolute;top:10px;right:10px;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.vtools button{background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:8px;font:700 .74rem var(--f-display);padding:6px 10px;cursor:pointer}
+.vtools button[aria-pressed="true"]{background:rgba(200,116,58,.35);border-color:rgba(200,116,58,.8)}
+.vdims{position:absolute;left:12px;bottom:10px;color:#F0B184;font:700 .86rem var(--f-display);text-shadow:0 1px 6px rgba(0,0,0,.6)}
+.vhelp{font-size:.76rem;color:var(--muted);margin-top:6px}
+.facts{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0 0}
+.facts div{background:var(--bg-alt);border-radius:10px;padding:10px 12px}
+.facts dt{font-size:.72rem;color:var(--muted);font-weight:600}
+.facts dd{margin:2px 0 0;font-family:var(--f-display);font-weight:700;font-size:.92rem}
+@media (max-width:640px){.facts{grid-template-columns:repeat(2,1fr)}}
+.ltitle{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-top:22px}
+.ltitle h3{font-size:.95rem}
+.ltitle small{color:var(--muted);font-size:.78rem}
+.ltable{width:100%;border-collapse:collapse;margin-top:8px;font-size:.86rem}
+.ltable th{text-align:left;font:700 .7rem var(--f-display);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:6px 8px;border-bottom:1px solid var(--line)}
+.ltable td{padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+.ltable td.nm{max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:var(--f-display);font-size:.8rem}
+.ltable select{font:inherit;font-size:.84rem;color:var(--ink);background:var(--bg);border:1.5px solid var(--line);border-radius:8px;padding:5px 8px;max-width:180px}
+.ltable input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent)}
+.dot{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:middle}
+.ltwrap{max-height:260px;overflow:auto;border-radius:8px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:18px}
+@media (max-width:640px){.grid{grid-template-columns:1fr 1fr}}
+.f{display:grid;gap:6px;align-content:start}
+.f label,.flabel{font-size:.8rem;font-weight:600;color:var(--ink)}
+.f small{color:var(--muted);font-size:.74rem}
+.f input,.f select{font:inherit;color:var(--ink);background:var(--bg);border:1.5px solid var(--line);border-radius:10px;padding:9px 11px;width:100%}
+.f input:focus,.f select:focus{border-color:var(--accent);outline:none}
+.check{display:flex;gap:8px;align-items:flex-start;font-size:.84rem}
+.check input{width:16px;height:16px;margin-top:3px;accent-color:var(--accent)}
+.dfm{list-style:none;padding:0;margin:18px 0 0;display:grid;gap:6px;font-size:.86rem}
+.dfm li{display:flex;gap:10px;align-items:flex-start}
+.dfm li::before{content:"";flex:none;width:10px;height:10px;border-radius:50%;margin-top:6px;background:var(--ok)}
+.dfm li.warn::before{background:var(--warn)}
+.dfm li.bad::before{background:var(--bad)}
+
+.quote{background:var(--carbono);color:#fff;border-radius:18px;padding:24px;display:grid;gap:16px}
+.quote .per{color:#BFD6CD;font-size:.88rem}
+.quote .price{font-family:var(--f-display);font-weight:800;font-size:clamp(2.2rem,4.6vw,3rem);letter-spacing:-.03em;line-height:1}
+.qrows{display:grid;gap:7px;border-top:1px solid rgba(255,255,255,.14);padding-top:14px;font-size:.86rem}
+.qrows div{display:flex;justify-content:space-between;gap:12px;color:#CFE3DC}
+.qrows div b{color:#fff;font-weight:600;text-align:right}
+.eta{display:flex;align-items:center;gap:10px;background:rgba(200,116,58,.16);border:1px solid rgba(200,116,58,.45);border-radius:12px;padding:10px 12px;font-size:.9rem}
+.eta b{color:#F0B184;font-family:var(--f-display)}
+.sendt{font-family:var(--f-display);font-weight:700}
+.ship,.send{display:grid;gap:10px;border-top:1px solid rgba(255,255,255,.14);padding-top:14px}
+.ship .f label,.send .f label{color:#CFE3DC}
+.ship .f input,.send .f input{background:#1A2E29;border-color:#2C4A43;color:#fff}
+.fopts{display:grid;gap:8px}
+.fopt{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;background:#1A2E29;border:1.5px solid #2C4A43;border-radius:12px;padding:10px 12px;cursor:pointer}
+.fopt:has(input:checked){border-color:var(--cobre);background:rgba(200,116,58,.12)}
+.fopt input{accent-color:var(--cobre);width:16px;height:16px;margin:0}
+.fopt .fn{font-family:var(--f-display);font-weight:700;font-size:.88rem;display:grid}
+.fopt .fn small{font-family:var(--f-body);font-weight:400;font-size:.74rem;color:#A9C4BA}
+.fopt b{font-family:var(--f-display);font-size:.92rem}
+.fopt.off{opacity:.5;cursor:not-allowed}
+.finfo{font-size:.74rem;color:#9DB3AA}
+.qtotal{display:grid;grid-template-columns:1fr auto;gap:2px 12px;background:rgba(46,139,111,.35);border-radius:12px;padding:12px 14px}
+.qtotal span{font-weight:600}
+.qtotal b{font-family:var(--f-display);font-size:1.3rem;color:#fff}
+.qtotal small{grid-column:1/-1;color:#CFE3DC;font-size:.8rem}
+.sendmsg{font-size:.84rem;color:#7FE0AE;min-height:1.2em}
+.sendmsg.warn{color:#FFC98A}
+.sendmsg a{color:#F0B184}
+.quote .note{font-size:.74rem;color:#9DB3AA}
+
+.tblwrap{overflow-x:auto}
+.tbl{width:100%;border-collapse:collapse;font-size:.93rem}
+.tbl th,.tbl td{text-align:left;padding:12px 10px;border-bottom:1px solid var(--line)}
+.tbl th{font:700 .76rem var(--f-display);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.tbl td.num{text-align:right}
+.adds{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:26px}
+.adds div{border-top:3px solid var(--trilha);padding-top:12px;display:grid;gap:4px}
+.adds div:nth-child(2){border-color:var(--cobre)} .adds div:nth-child(4){border-color:var(--ink)}
+.adds p{color:var(--muted);font-size:.9rem}
+@media (max-width:860px){.adds{grid-template-columns:1fr 1fr}}
+.shared{display:grid;grid-template-columns:1.1fr 1fr;gap:36px;align-items:center}
+@media (max-width:860px){.shared{grid-template-columns:1fr}}
+.panelviz{background:var(--mascara);border-radius:14px;padding:16px;display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(4,38px);gap:6px}
+.panelviz span{border-radius:4px;background:rgba(255,255,255,.08);border:1px dashed rgba(255,255,255,.25)}
+.panelviz span.a{background:#C8743A;border:0}.panelviz span.b{background:#2E8B6F;border:0}.panelviz span.c{background:#E9D5B5;border:0}
+.panelviz span.w2{grid-column:span 2}.panelviz span.h2{grid-row:span 2}
+.plans{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;max-width:880px}
+.plan{border:1px solid var(--line);border-radius:18px;padding:26px;display:grid;gap:12px;background:var(--card);align-content:start}
+.plan.feat{border:2px solid var(--accent)}
+.plan .pp{font-family:var(--f-display);font-weight:800;font-size:1.9rem}
+.plan .pp small{font-size:.86rem;color:var(--muted);font-weight:500}
+.plan ul{margin:0;padding-left:18px;color:var(--muted);display:grid;gap:6px;font-size:.92rem}
+@media (max-width:760px){.plans{grid-template-columns:1fr}}
+.who{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.who div{border-top:3px solid var(--accent);padding-top:14px;display:grid;gap:6px}
+.who div:nth-child(2){border-color:var(--cobre)} .who div:nth-child(3){border-color:var(--trilha)} .who div:nth-child(4){border-color:var(--ink)}
+.who p{color:var(--muted);font-size:.92rem}
+@media (max-width:860px){.who{grid-template-columns:1fr 1fr}}
+#faq{background:var(--bg-alt)}
+.faq{display:grid;gap:10px;max-width:840px}
+details{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 20px}
+summary{cursor:pointer;font-family:var(--f-display);font-weight:700;font-size:.95rem;list-style:none;display:flex;justify-content:space-between;gap:16px}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";color:var(--cobre);font-size:1.3rem;line-height:1}
+details[open] summary::after{content:"–"}
+details p{color:var(--muted);margin-top:10px}
+.contact{display:grid;grid-template-columns:1fr 1.1fr;gap:40px}
+@media (max-width:860px){.contact{grid-template-columns:1fr}}
+.cinfo{display:grid;gap:14px;margin-top:22px}
+.cinfo div{display:grid}
+.cinfo small{color:var(--muted);font-size:.8rem}
+.cinfo b{font-family:var(--f-display);font-size:1rem}
+.cgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:480px){.cgrid{grid-template-columns:1fr}}
+.full{grid-column:1/-1}
+textarea{font:inherit;color:var(--ink);background:var(--bg);border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;width:100%;min-height:120px;resize:vertical}
+.formmsg{margin-top:12px;font-size:.9rem;color:var(--ok);min-height:1.3em}
+.formmsg.warn{color:var(--bad)}
+footer{background:var(--carbono);color:#A9C4BA;padding:36px 0;font-size:.86rem}
+footer .wrap{display:flex;flex-wrap:wrap;gap:16px 32px;align-items:center;justify-content:space-between}
+footer .brand b{font-size:1.1rem}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#inicio" aria-label="VIA72, início">
+      <svg viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" rx="22" fill="#2E8B6F"/><polyline points="26,28 68,28 68,44 40,72" fill="none" stroke="#C8743A" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/><circle cx="26" cy="28" r="12" fill="#C8743A"/><circle cx="26" cy="28" r="5" fill="#2E8B6F"/><circle cx="40" cy="74" r="12" fill="#C8743A"/><circle cx="40" cy="74" r="5" fill="#2E8B6F"/></svg>
+      <b>via<span>72</span></b>
+    </a>
+    <nav class="main" aria-label="Seções">
+      <a href="#como">Como funciona</a>
+      <a href="#orcamento">Orçamento</a>
+      <a href="#precos">Preços</a>
+      <a href="#compartilhado">Lote compartilhado</a>
+      <a href="#planos">Planos</a>
+      <a href="#faq">Dúvidas</a>
+    </nav>
+    <a class="btn btn-cu" href="#orcamento">Enviar Gerber</a>
+  </div>
+</header>
+
+<main id="inicio">
+<section class="hero" aria-labelledby="h-hero">
+  <div class="wrap">
+    <div>
+      <p class="kicker">PCB nacional para protótipo e lote piloto</p>
+      <h1 id="h-hero" style="margin-top:14px">Gerber hoje.<br>Placa testada em <em>72 horas.</em></h1>
+      <p class="lead">Placas de 1 a 4 camadas fabricadas no Brasil, com nota fiscal, revisão de DFM e laudo de continuidade em cada lote. Envie Gerber, KiCad ou Eagle e veja o preço na hora.</p>
+      <div class="ctas">
+        <a class="btn btn-cu" href="#orcamento">Enviar arquivos e ver o preço</a>
+        <a class="btn btn-ghost" href="#compartilhado">Lote compartilhado</a>
+      </div>
+      <div class="specs" aria-label="Capacidade">
+        <div class="spec"><b class="num">1 a 4</b>camadas de cobre</div>
+        <div class="spec"><b class="num">200 × 100 mm</b>maior placa</div>
+        <div class="spec"><b>PTH + laudo</b>continuidade testada</div>
+        <div class="spec"><b>NF-e</b>para CNPJ e CPF</div>
+      </div>
+    </div>
+    <div class="stage">
+      <canvas id="route" width="560" height="448" role="img" aria-label="Animação de trilhas de cobre sendo roteadas numa placa verde"></canvas>
+      <div class="hud"><span>ROTA <b id="rN" class="num">0</b> / <span id="rT" class="num">0</span></span><span>trilha 0,25 mm · via 0,4 mm</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="como" aria-labelledby="h-como">
+  <div class="wrap">
+    <div class="sec-head"><p class="kicker">Como funciona</p><h2 id="h-como">Do arquivo à placa testada</h2></div>
+    <div class="steps">
+      <div class="step"><span class="n">01</span><h3>Envie o projeto</h3><p>Zip de Gerbers com furação, arquivo .kicad_pcb ou .brd do Eagle. A placa aparece na tela, camada por camada.</p></div>
+      <div class="step"><span class="n">02</span><h3>Confira camadas e preço</h3><p>Ajuste a função de cada arquivo, escolha quantidade, máscara e prazo. Revisamos o DFM sem custo antes de produzir.</p></div>
+      <div class="step"><span class="n">03</span><h3>Receba com laudo</h3><p>Placa furada, metalizada e testada, com laudo de continuidade e nota fiscal. Retirada em Curitiba ou envio pelos Correios.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="orcamento" aria-labelledby="h-orc">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="kicker">Orçamento instantâneo</p>
+      <h2 id="h-orc">Envie a placa e veja o preço</h2>
+      <p class="lead">Aceita Gerber RS-274X com furação Excellon (em .zip ou arquivos soltos), KiCad .kicad_pcb e Eagle .brd. Os arquivos são lidos no seu navegador.</p>
+    </div>
+    <div class="calc">
+      <div class="panel">
+        <label class="drop" id="drop" for="file">
+          <svg viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" rx="22" fill="#0F5B4A"/><polyline points="26,28 68,28 68,44 40,72" fill="none" stroke="#C8743A" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/><circle cx="26" cy="28" r="12" fill="#C8743A"/><circle cx="26" cy="28" r="5" fill="#0F5B4A"/><circle cx="40" cy="74" r="12" fill="#C8743A"/><circle cx="40" cy="74" r="5" fill="#0F5B4A"/></svg>
+          <span><strong>Arraste os arquivos aqui ou clique para escolher</strong><small>.zip de Gerbers · .gbr .gtl .gbl .gto .gm1 .drl… · .kicad_pcb · .brd</small></span>
+          <input type="file" id="file" multiple accept=".zip,.gbr,.ger,.gtl,.gbl,.gts,.gbs,.gto,.gbo,.gtp,.gbp,.gko,.gm1,.gml,.g1,.g2,.g3,.g4,.gl2,.gl3,.drl,.xln,.txt,.exc,.cmp,.sol,.stc,.sts,.plc,.pls,.kicad_pcb,.brd">
+        </label>
+        <p class="filemeta" id="filemeta" aria-live="polite"></p>
+
+        <div class="viewer" id="viewer">
+          <canvas id="pcbView" aria-label="Visualização da placa"></canvas>
+          <div class="vbadge" id="vbadge">Exemplo</div>
+          <div class="vtools" role="group" aria-label="Vista">
+            <button type="button" data-v="top" aria-pressed="true">Topo</button>
+            <button type="button" data-v="bottom" aria-pressed="false">Base</button>
+            <button type="button" data-v="layers" aria-pressed="false">Camadas</button>
+            <button type="button" id="vFit">Enquadrar</button>
+          </div>
+          <div class="vdims num" id="vdims"></div>
+        </div>
+        <p class="vhelp">Arraste para mover · role para aproximar · duplo clique para enquadrar · a vista Base mostra a placa espelhada, como vista por baixo</p>
+
+        <dl class="facts" aria-label="Medidas lidas do arquivo">
+          <div><dt>Dimensões</dt><dd class="num" id="fDims">—</dd></div>
+          <div><dt>Camadas de cobre</dt><dd class="num" id="fCu">—</dd></div>
+          <div><dt>Furos</dt><dd class="num" id="fHoles">—</dd></div>
+          <div><dt>Trilha · furo mín.</dt><dd class="num" id="fMin">—</dd></div>
+        </dl>
+
+        <div class="ltitle"><h3>Camadas do arquivo</h3><small id="lsrc">Defina a função de cada camada</small></div>
+        <div class="ltwrap"><table class="ltable"><thead><tr><th></th><th>Arquivo / camada</th><th>Função</th><th>Ver</th></tr></thead><tbody id="ltbody"></tbody></table></div>
+
+        <div class="grid">
+          <div class="f"><label for="ptype">Tipo de placa</label><select id="ptype"><option value="auto">Automático</option><option value="1F">1 camada</option><option value="2F">Dupla face (PTH)</option><option value="4L">Multilayer 4 camadas</option></select><small id="ptypeInfo"></small></div>
+          <div class="f"><label for="qty">Quantidade de placas</label><input id="qty" type="number" min="1" step="1" value="5" inputmode="numeric"></div>
+          <div class="f"><label for="mode">Modalidade</label><select id="mode"><option value="ded">Lote dedicado</option><option value="shr">Lote compartilhado</option></select></div>
+          <div class="f"><label for="mask">Máscara de solda</label><select id="mask"><option value="verde">Verde</option><option value="azulr">Azul ultrarrápido (−1 dia útil)</option><option value="azul">Azul</option><option value="vermelho">Vermelho</option><option value="preto">Preto</option></select></div>
+          <div class="f full" style="grid-column:span 2">
+            <span class="flabel">Opções</span>
+            <label class="check"><input type="checkbox" id="urg"> Urgência 24–48 h (+50%, 1 camada e dupla face, lote dedicado)</label>
+            <label class="check"><input type="checkbox" id="laudo1"> Laudo de continuidade em placa de 1 camada (R$ 40 por lote; já incluído nas demais)</label>
+          </div>
+        </div>
+        <ul class="dfm" id="dfm" aria-label="Verificação de DFM"></ul>
+      </div>
+
+      <aside class="quote" aria-label="Resultado do orçamento">
+        <div aria-live="polite">
+          <p class="per" id="qlabel">Preço estimado</p>
+          <p class="price num" id="qprice">R$ 0</p>
+          <p class="per num" id="qper"></p>
+        </div>
+        <div class="eta"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="#C8743A" stroke-width="2"/><path d="M12 7v5l3 2" stroke="#C8743A" stroke-width="2" fill="none" stroke-linecap="round"/></svg><span>Prazo de produção: <b id="qeta">—</b></span></div>
+        <div class="qrows" id="qrows"></div>
+
+        <div class="ship">
+          <p class="sendt">Entrega pelos Correios</p>
+          <div class="f"><label for="cep">CEP de entrega</label><input id="cep" inputmode="numeric" autocomplete="postal-code" placeholder="00000-000" maxlength="9"></div>
+          <div class="fopts" id="freteOpts" role="radiogroup" aria-label="Opções de entrega"></div>
+          <p class="finfo num" id="freteInfo" aria-live="polite"></p>
+          <div class="qtotal" id="qtotal" hidden><span>Total com frete</span><b id="qtotalv" class="num"></b><small id="qtotaleta"></small></div>
+        </div>
+
+        <form class="send" id="sendForm" novalidate>
+          <p class="sendt">Enviar este orçamento</p>
+          <div class="f"><label for="sn">Nome</label><input id="sn" autocomplete="name" required></div>
+          <div class="f"><label for="se">E-mail</label><input id="se" type="email" autocomplete="email" required></div>
+          <div class="f"><label for="sc">Empresa e CNPJ (opcional)</label><input id="sc" autocomplete="organization"></div>
+          <div class="f"><label for="sp">WhatsApp</label><input id="sp" type="tel" autocomplete="tel" inputmode="tel"></div>
+          <div class="f"><label for="so">Observações</label><input id="so" placeholder="Espessura, acabamento, prazo"></div>
+          <button class="btn btn-cu" id="sendBtn" type="submit">Enviar orçamento com os arquivos</button>
+          <p class="sendmsg" id="sendmsg" aria-live="polite"></p>
+        </form>
+        <p class="note">Enviado para contato@zirconiumlabs.com. Valores com impostos; o preço final sai após a revisão de DFM, sem custo. Placa FR-4 de 1,6 mm, cobre 35 µm, legenda branca e acabamento HASL. Frete estimado pela tabela dos Correios.</p>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<section id="precos" aria-labelledby="h-precos">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="kicker">Preços</p>
+      <h2 id="h-precos">Setup do lote + painéis de 200 × 100 mm</h2>
+      <p class="lead">O preço de um lote dedicado é o setup mais o número de painéis usados pelas suas placas. O aproveitamento é calculado a partir das dimensões lidas do arquivo.</p>
+    </div>
+    <div class="tblwrap">
+      <table class="tbl">
+        <thead><tr><th>Tipo</th><th>Setup</th><th>Por painel</th><th>1 painel</th><th>3 painéis</th><th>10 painéis</th><th>Prazo</th></tr></thead>
+        <tbody>
+          <tr><td>1 camada</td><td class="num">R$ 140</td><td class="num">R$ 115</td><td class="num">R$ 255</td><td class="num">R$ 485</td><td class="num">R$ 1.290</td><td>2–3 dias úteis</td></tr>
+          <tr><td>Dupla face (PTH)</td><td class="num">R$ 320</td><td class="num">R$ 235</td><td class="num">R$ 555</td><td class="num">R$ 1.025</td><td class="num">R$ 2.670</td><td>3–5 dias úteis</td></tr>
+          <tr><td>Multilayer 4 camadas</td><td class="num">R$ 590</td><td class="num">R$ 450</td><td class="num">R$ 1.040</td><td class="num">R$ 1.940</td><td class="num">R$ 5.090</td><td>7–10 dias úteis</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="adds">
+      <div><h3>Incluído</h3><p>Furação CNC (300 furos por painel), máscara de solda, legenda branca, revisão de DFM e laudo nas placas de 2 e 4 camadas.</p></div>
+      <div><h3>Urgência 24–48 h</h3><p>+50% sobre o lote, para 1 camada e dupla face.</p></div>
+      <div><h3>Máscara azul ultrarrápida</h3><p>Sem custo e 1 dia útil a menos no prazo.</p></div>
+      <div><h3>Furos excedentes</h3><p>R$ 0,05 por furo acima de 300 por painel.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="compartilhado" aria-labelledby="h-shr" style="background:var(--bg-alt)">
+  <div class="wrap shared">
+    <div>
+      <p class="kicker">Lote compartilhado</p>
+      <h2 id="h-shr" style="margin-top:12px">Pague só o pedaço do painel que você usa</h2>
+      <p class="lead" style="margin-top:14px">Juntamos placas de vários clientes no mesmo painel. Sem setup, cobrando a fração exata do painel (mínimo de 1/4). O painel fecha toda sexta e sai em 7 dias úteis.</p>
+      <p style="margin-top:16px;color:var(--muted)">Exemplo: 5 placas de dupla face com 100 × 100 mm usam 2,5 painéis e custam <b class="num">R$ 588</b> no lote compartilhado, contra R$ 1.025 em lote dedicado.</p>
+    </div>
+    <div class="panelviz" aria-hidden="true">
+      <span class="a w2 h2"></span><span class="a w2 h2"></span><span class="b"></span><span class="b"></span><span class="c w2"></span>
+      <span class="b"></span><span class="b"></span><span class="c w2"></span>
+      <span class="a w2"></span><span class="b w2"></span><span></span><span></span><span></span><span></span>
+      <span class="c"></span><span class="c"></span><span class="a w2"></span><span></span><span></span><span></span><span></span>
+    </div>
+  </div>
+</section>
+
+<section id="planos" aria-labelledby="h-planos">
+  <div class="wrap">
+    <div class="sec-head"><p class="kicker">Planos</p><h2 id="h-planos">Para quem faz placa todo mês</h2></div>
+    <div class="plans">
+      <div class="plan"><h3>P&amp;D</h3><p class="pp num">R$ 790<small> /mês</small></p><ul><li>3 painéis de dupla face por mês no lote compartilhado</li><li>Revisão de DFM prioritária</li><li>10% de desconto em lotes dedicados</li></ul></div>
+      <div class="plan feat"><h3>Design House</h3><p class="pp num">R$ 1.990<small> /mês</small></p><ul><li>8 painéis de dupla face por mês</li><li>2 setups dedicados com prioridade de 48 h</li><li>1 multilayer por trimestre com 20% de desconto</li></ul></div>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="h-who" style="padding-top:0">
+  <div class="wrap">
+    <div class="sec-head"><p class="kicker">Para quem</p><h2 id="h-who">Quem não pode esperar a importação</h2></div>
+    <div class="who">
+      <div><h3>Engenharia de hardware</h3><p>Protótipo com nota fiscal nacional, sem imposto de importação e sem semanas de espera.</p></div>
+      <div><h3>Design houses</h3><p>Revisões rápidas para o cliente final, com plano mensal e prioridade.</p></div>
+      <div><h3>Laboratórios e universidades</h3><p>Cotação formal, nota fiscal e laudo para prestação de contas.</p></div>
+      <div><h3>Startups e makers</h3><p>Lote compartilhado para poucas placas, pagando só o que usar.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="faq" aria-labelledby="h-faq">
+  <div class="wrap">
+    <div class="sec-head"><p class="kicker">Dúvidas frequentes</p><h2 id="h-faq">Antes de enviar o Gerber</h2></div>
+    <div class="faq">
+      <details><summary>Quais arquivos posso enviar?</summary><p>Gerber RS-274X (com os arquivos de furação Excellon), em .zip ou soltos; projeto do KiCad (.kicad_pcb, versão 5 ou mais nova); e placa do Eagle (.brd, versão 6 ou mais nova). Se a função de algum arquivo não for reconhecida, escolha na tabela de camadas.</p></details>
+      <details><summary>As 72 horas valem para qualquer placa?</summary><p>Valem para placas de 1 camada, contadas a partir da aprovação do DFM e do pagamento. Dupla face sai em 3 a 5 dias úteis e multilayer em 7 a 10. Com urgência, 1 camada e dupla face saem em 24 a 48 horas.</p></details>
+      <details><summary>O que diz o laudo de continuidade?</summary><p>Testamos as redes de cada lote (100% até 5 painéis, amostragem acima disso) e informamos aprovação, falhas encontradas e desalinhamento entre camadas.</p></details>
+      <details><summary>Quais são as regras mínimas de projeto?</summary><p>A calculadora avisa quando a trilha fica abaixo de 0,2 mm ou o furo abaixo de 0,4 mm. Projetos fora dessas regras são avaliados na revisão de DFM antes da confirmação.</p></details>
+      <details><summary>Vocês montam componentes?</summary><p>Não. Entregamos a placa nua, furada, metalizada e testada.</p></details>
+      <details><summary>Emitem nota fiscal?</summary><p>Sim, para CNPJ e CPF, em todos os pedidos.</p></details>
+    </div>
+  </div>
+</section>
+
+<section id="contato" aria-labelledby="h-ct">
+  <div class="wrap contact">
+    <div>
+      <p class="kicker">Contato</p>
+      <h2 id="h-ct" style="margin-top:12px">Fale com quem vai fabricar a sua placa</h2>
+      <p class="lead" style="margin-top:14px">Lotes maiores, placas acima de 200 × 100 mm, mais de 4 camadas ou dúvidas de DFM.</p>
+      <div class="cinfo">
+        <div><small>WhatsApp</small><b class="num">(00) 00000-0000</b></div>
+        <div><small>E-mail</small><b>contato@zirconiumlabs.com</b></div>
+        <div><small>Atendimento</small><b>Segunda a sexta, das 8h às 18h</b></div>
+      </div>
+    </div>
+    <form class="panel" id="cform" novalidate>
+      <div class="cgrid">
+        <div class="f"><label for="cn">Nome</label><input id="cn" autocomplete="name" required></div>
+        <div class="f"><label for="ce">E-mail</label><input id="ce" type="email" autocomplete="email" required></div>
+        <div class="f"><label for="cc">Empresa (opcional)</label><input id="cc" autocomplete="organization"></div>
+        <div class="f"><label for="ct">Assunto</label><select id="ct"><option>Orçamento de PCB</option><option>Lote compartilhado</option><option>Plano mensal</option><option>Outro assunto</option></select></div>
+        <div class="f full"><label for="cm">Mensagem</label><textarea id="cm" placeholder="Camadas, dimensões, quantidade e prazo."></textarea></div>
+      </div>
+      <p style="margin-top:16px"><button class="btn btn-primary" type="submit">Enviar mensagem</button></p>
+      <p class="formmsg" id="formmsg" aria-live="polite"></p>
+    </form>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <a class="brand" href="#inicio" aria-label="VIA72, voltar ao início">
+      <svg viewBox="0 0 100 100" aria-hidden="true" style="width:26px;height:26px"><rect width="100" height="100" rx="22" fill="#2E8B6F"/><polyline points="26,28 68,28 68,44 40,72" fill="none" stroke="#C8743A" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/><circle cx="26" cy="28" r="12" fill="#C8743A"/><circle cx="26" cy="28" r="5" fill="#2E8B6F"/><circle cx="40" cy="74" r="12" fill="#C8743A"/><circle cx="40" cy="74" r="5" fill="#2E8B6F"/></svg>
+      <b>via<span>72</span></b>
+    </a>
+    <span>VIA72 Circuitos Impressos · uma operação Zirconium</span>
+    <span>PCB nacional, com laudo, a partir de 72 horas.</span>
+  </div>
+</footer>
+
+<script>
+// ===================== VIA72 · leitura de arquivos de PCB =====================
+// Modelo comum (mm, eixo Y para cima):
+// board = { source, layers:[{id,name,file,role,prims:[...],holes:[...],declared}], notes:[] }
+// prims: {t:"line",x1,y1,x2,y2,w} | {t:"flash",shape:"C"|"R"|"O"|"P",x,y,w,h,rot,n} | {t:"region",pts:[[x,y]...]} ; clear:true = polaridade clara
+// holes: {x,y,d,plated}
+const PCB = (function(){
+  const ROLES = {top:"Cobre topo", bottom:"Cobre base", inner:"Cobre interno", mask_top:"Máscara topo", mask_bot:"Máscara base",
+    silk_top:"Legenda topo", silk_bot:"Legenda base", outline:"Contorno da placa", drill:"Furação", paste:"Pasta (ignorada)", ignore:"Ignorar"};
+  const COPPER = r => r === "top" || r === "bottom" || r === "inner";
+
+  // ---------- utilidades geométricas ----------
+  function arcPts(cx, cy, r, a0, a1, ccw){
+    let sweep = a1 - a0;
+    if (ccw){ while (sweep <= 1e-9) sweep += Math.PI*2; } else { while (sweep >= -1e-9) sweep -= Math.PI*2; }
+    const n = Math.max(6, Math.ceil(Math.abs(sweep) / (Math.PI*2) * 72)), out = [];
+    for (let k = 0; k <= n; k++){ const a = a0 + sweep*k/n; out.push([cx + r*Math.cos(a), cy + r*Math.sin(a)]); }
+    return out;
+  }
+  function circle3(p1, p2, p3){ // centro do círculo por três pontos
+    const ax = p1[0], ay = p1[1], bx = p2[0], by = p2[1], cx = p3[0], cy = p3[1];
+    const d = 2*(ax*(by-cy) + bx*(cy-ay) + cx*(ay-by)); if (Math.abs(d) < 1e-12) return null;
+    const ux = ((ax*ax+ay*ay)*(by-cy) + (bx*bx+by*by)*(cy-ay) + (cx*cx+cy*cy)*(ay-by)) / d;
+    const uy = ((ax*ax+ay*ay)*(cx-bx) + (bx*bx+by*by)*(ax-cx) + (cx*cx+cy*cy)*(bx-ax)) / d;
+    return [ux, uy, Math.hypot(ax-ux, ay-uy)];
+  }
+  function arc3(s, m, e){ const c = circle3(s, m, e); if (!c) return [s, e];
+    const a0 = Math.atan2(s[1]-c[1], s[0]-c[0]), am = Math.atan2(m[1]-c[1], m[0]-c[0]), a1 = Math.atan2(e[1]-c[1], e[0]-c[0]);
+    const norm = a => { while (a < 0) a += Math.PI*2; return a % (Math.PI*2); };
+    const ccw = norm(am - a0) < norm(a1 - a0);
+    return arcPts(c[0], c[1], c[2], a0, a1, ccw);
+  }
+  function polyToLines(pts, w, out, closed){ for (let i = 0; i < pts.length - 1; i++) out.push({t:"line", x1:pts[i][0], y1:pts[i][1], x2:pts[i+1][0], y2:pts[i+1][1], w});
+    if (closed && pts.length > 2) out.push({t:"line", x1:pts[pts.length-1][0], y1:pts[pts.length-1][1], x2:pts[0][0], y2:pts[0][1], w}); }
+  function bbox(prims, holes, center){
+    const b = [Infinity, Infinity, -Infinity, -Infinity];
+    const add = (x, y, r) => { if (x - r < b[0]) b[0] = x - r; if (y - r < b[1]) b[1] = y - r; if (x + r > b[2]) b[2] = x + r; if (y + r > b[3]) b[3] = y + r; };
+    for (const p of prims || []){
+      if (p.clear) continue;
+      if (p.t === "line"){ const r = center ? 0 : p.w/2; add(p.x1, p.y1, r); add(p.x2, p.y2, r); }
+      else if (p.t === "flash"){ add(p.x, p.y, Math.max(p.w, p.h)/2); }
+      else if (p.t === "region"){ for (const q of p.pts) add(q[0], q[1], 0); }
+    }
+    for (const h of holes || []) add(h.x, h.y, h.d/2);
+    return b[0] === Infinity ? null : b;
+  }
+  const union = (a, b) => !a ? b : !b ? a : [Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.max(a[2], b[2]), Math.max(a[3], b[3])];
+
+  // ---------- classificação de arquivos Gerber pelo nome ----------
+  function roleFromName(name){
+    const n = name.toLowerCase(), ext = n.split(".").pop();
+    const rules = [
+      [/(f[._-]?cu|\.gtl$|\.cmp$|top[._-]?(layer|copper)|copper[._-]?top|[._-]top\.gbr$)/, "top"],
+      [/(b[._-]?cu|\.gbl$|\.sol$|bottom[._-]?(layer|copper)|copper[._-]?bottom|[._-]bot(tom)?\.gbr$)/, "bottom"],
+      [/(in\d+[._-]?cu|\.g\d+$|\.gl\d+$|\.g\d+l$|inner|\.ly\d+$|\.gp\d+$)/, "inner"],
+      [/(f[._-]?mask|\.gts$|\.stc$|soldermask[._-]?top|top[._-]?mask|smask[._-]?top)/, "mask_top"],
+      [/(b[._-]?mask|\.gbs$|\.sts$|soldermask[._-]?bot|bottom[._-]?mask|smask[._-]?bot)/, "mask_bot"],
+      [/(f[._-]?silk|\.gto$|\.plc$|silk[._-]?top|top[._-]?silk|legend[._-]?top)/, "silk_top"],
+      [/(b[._-]?silk|\.gbo$|\.pls$|silk[._-]?bot|bottom[._-]?silk|legend[._-]?bot)/, "silk_bot"],
+      [/(edge[._-]?cuts|\.gko$|\.gm\d*$|\.gml$|outline|profile|board[._-]?edge|\.dim$|mechanical)/, "outline"],
+      [/(f[._-]?paste|b[._-]?paste|\.gtp$|\.gbp$|\.crc$|\.crs$|paste)/, "paste"],
+      [/(\.drl$|\.xln$|\.exc$|\.drd$|\.drill$|npth|pth|drill)/, "drill"]
+    ];
+    for (const [re, r] of rules) if (re.test(n)) return r;
+    return null;
+  }
+  function roleFromX2(txt){
+    const m = /%TF\.FileFunction,([^*%]+)\*%/.exec(txt) || /TF\.FileFunction,([^\s*%]+)/.exec(txt); if (!m) return null;
+    const f = m[1].split(",");
+    if (f[0] === "Copper") return /Top/i.test(f[2]) ? "top" : /Bot/i.test(f[2]) ? "bottom" : "inner";
+    if (f[0] === "Soldermask") return /Top/i.test(f[1]) ? "mask_top" : "mask_bot";
+    if (f[0] === "Legend") return /Top/i.test(f[1]) ? "silk_top" : "silk_bot";
+    if (f[0] === "Profile") return "outline";
+    if (f[0] === "Paste") return "paste";
+    if (/Plated|NonPlated|Drill/i.test(f[0])) return "drill";
+    return null;
+  }
+
+  // ---------- Gerber RS-274X ----------
+  function parseGerber(text){
+    const prims = [];
+    let unit = 1, fmt = {xi:2, xd:4, yi:2, yd:4, tz:false}, apertures = {}, macros = {}, cur = null;
+    let x = 0, y = 0, interp = 1, region = false, contour = [], clear = false, quadrant = "multi";
+    const tokens = []; // blocos estendidos %...% e comandos terminados em *
+    let i = 0;
+    while (i < text.length){
+      const c = text[i];
+      if (c === "%"){ const j = text.indexOf("%", i + 1); if (j < 0) break; tokens.push({ext:true, s:text.slice(i + 1, j)}); i = j + 1; }
+      else if (c === "\r" || c === "\n" || c === " " || c === "\t"){ i++; }
+      else { const j = text.indexOf("*", i); if (j < 0) break; tokens.push({ext:false, s:text.slice(i, j).replace(/\s+/g, "")}); i = j + 1; }
+    }
+    const num = (s, int, dec) => {
+      if (s.includes(".")) return parseFloat(s) * unit;
+      let neg = s[0] === "-", t = s.replace(/^[+-]/, "");
+      if (fmt.tz){ while (t.length < int + dec) t += "0"; }
+      return (neg ? -1 : 1) * parseInt(t, 10) / Math.pow(10, dec) * unit;
+    };
+    const ap = d => apertures[d] || {shape:"C", w:0.1, h:0.1};
+    function flush(){ if (contour.length > 2) prims.push({t:"region", pts:contour, clear}); contour = []; }
+    for (const tk of tokens){
+      if (tk.ext){
+        for (const part of tk.s.split("*").filter(Boolean)){
+          if (/^FS/.test(part)){ const m = /FS([LT])?[AI]?X(\d)(\d)Y(\d)(\d)/.exec(part); if (m){ fmt = {tz:m[1] === "T", xi:+m[2], xd:+m[3], yi:+m[4], yd:+m[5]}; } }
+          else if (/^MOIN/.test(part)) unit = 25.4;
+          else if (/^MOMM/.test(part)) unit = 1;
+          else if (/^LPC/.test(part)) clear = true;
+          else if (/^LPD/.test(part)) clear = false;
+          else if (/^AM/.test(part)){ macros[part.slice(2)] = tk.s; break; }
+          else if (/^ADD/.test(part)){
+            const m = /^ADD(\d+)([^,]+),?(.*)$/.exec(part); if (!m) continue;
+            const d = +m[1], t = m[2], p = m[3] ? m[3].split("X").map(parseFloat) : [];
+            if (t === "C") apertures[d] = {shape:"C", w:p[0]*unit, h:p[0]*unit};
+            else if (t === "R") apertures[d] = {shape:"R", w:p[0]*unit, h:(p[1] ?? p[0])*unit};
+            else if (t === "O") apertures[d] = {shape:"O", w:p[0]*unit, h:(p[1] ?? p[0])*unit};
+            else if (t === "P") apertures[d] = {shape:"P", w:p[0]*unit, h:p[0]*unit, n:p[1] || 6, rot:p[2] || 0};
+            else { // macro: estimativa pelo maior valor geométrico dos parâmetros
+              let w = 0.5, h = 0.5;
+              if (/RoundRect/i.test(t) && p.length >= 9){ const r = p[0], xs = [p[1], p[3], p[5], p[7]], ys = [p[2], p[4], p[6], p[8]];
+                w = (Math.max(...xs) - Math.min(...xs) + 2*r) * unit; h = (Math.max(...ys) - Math.min(...ys) + 2*r) * unit; apertures[d] = {shape:"R", w, h}; }
+              else { const v = p.filter(n => isFinite(n) && n > 0); const mx = v.length ? Math.max(...v.slice(0, 4)) : 0.5; apertures[d] = {shape:"C", w:mx*unit, h:mx*unit}; }
+            }
+          }
+        }
+        continue;
+      }
+      let s = tk.s; if (!s) continue;
+      if (/^G04/.test(s) || /^M0[02]/.test(s)) continue;
+      let g;
+      while ((g = /^G0?(\d+)/.exec(s))){
+        const code = +g[1];
+        if (code === 1 || code === 2 || code === 3) interp = code;
+        else if (code === 36){ region = true; contour = []; }
+        else if (code === 37){ flush(); region = false; }
+        else if (code === 74) quadrant = "single";
+        else if (code === 75) quadrant = "multi";
+        else if (code === 70) unit = 25.4; else if (code === 71) unit = 1;
+        else if (code === 54){ s = s.slice(g[0].length); continue; }
+        s = s.slice(g[0].length);
+      }
+      const dsel = /^D(\d+)$/.exec(s); if (dsel && +dsel[1] >= 10){ cur = +dsel[1]; continue; }
+      const m = /^(?:X([+-]?[\d.]+))?(?:Y([+-]?[\d.]+))?(?:I([+-]?[\d.]+))?(?:J([+-]?[\d.]+))?(?:D0?([123]))?$/.exec(s);
+      if (!m) continue;
+      const nx = m[1] !== undefined ? num(m[1], fmt.xi, fmt.xd) : x, ny = m[2] !== undefined ? num(m[2], fmt.yi, fmt.yd) : y;
+      const I = m[3] !== undefined ? num(m[3], fmt.xi, fmt.xd) : 0, J = m[4] !== undefined ? num(m[4], fmt.yi, fmt.yd) : 0;
+      const op = m[5] ? +m[5] : (m[1] !== undefined || m[2] !== undefined ? 1 : 0);
+      if (op === 2){ if (region){ flush(); contour = [[nx, ny]]; } x = nx; y = ny; continue; }
+      if (op === 3){ const a = ap(cur); prims.push({t:"flash", shape:a.shape, x:nx, y:ny, w:a.w, h:a.h, n:a.n, rot:a.rot || 0, clear}); x = nx; y = ny; continue; }
+      if (op === 1){
+        let pts;
+        if (interp === 1) pts = [[x, y], [nx, ny]];
+        else {
+          let cx = x + I, cy = y + J;
+          if (quadrant === "single"){ // escolhe o centro (sinais de I/J) mais coerente
+            let best = null, bd = Infinity;
+            for (const sx of [1, -1]) for (const sy of [1, -1]){ const ccx = x + sx*Math.abs(I), ccy = y + sy*Math.abs(J); const dd = Math.abs(Math.hypot(x-ccx, y-ccy) - Math.hypot(nx-ccx, ny-ccy)); if (dd < bd){ bd = dd; best = [ccx, ccy]; } }
+            cx = best[0]; cy = best[1];
+          }
+          const r = Math.hypot(x - cx, y - cy), a0 = Math.atan2(y - cy, x - cx), a1 = Math.atan2(ny - cy, nx - cx);
+          pts = (Math.abs(nx - x) < 1e-9 && Math.abs(ny - y) < 1e-9 && quadrant === "multi") ? arcPts(cx, cy, r, a0, a0 + (interp === 3 ? 2 : -2)*Math.PI + (interp === 3 ? -1e-6 : 1e-6), interp === 3) : arcPts(cx, cy, r, a0, a1, interp === 3);
+        }
+        if (region){ if (!contour.length) contour.push([x, y]); for (let k = 1; k < pts.length; k++) contour.push(pts[k]); }
+        else { const a = ap(cur); for (let k = 0; k < pts.length - 1; k++) prims.push({t:"line", x1:pts[k][0], y1:pts[k][1], x2:pts[k+1][0], y2:pts[k+1][1], w:a.w, clear}); }
+        x = nx; y = ny;
+      }
+    }
+    return prims;
+  }
+
+  // ---------- Excellon (furação) ----------
+  function parseExcellon(text, name){
+    const holes = [], tools = {};
+    let unit = 1, zeros = "LZ", fmtInt = 3, fmtDec = 3, tool = null, header = false, lastX = 0, lastY = 0, explicitFmt = false;
+    let plated = !/npth|non[-_ ]?plated/i.test(name || "") && !/TYPE=NON_PLATED|NonPlated/i.test(text);
+    for (let raw of text.split(/\r?\n/)){
+      const ln = raw.trim(); if (!ln) continue;
+      if (ln === "M48"){ header = true; continue; }
+      if (/^;\s*FORMAT\s*=\s*\{?(\d):(\d)/i.test(ln) || /^;FILE_FORMAT=(\d):(\d)/i.test(ln)){ const m = /(\d):(\d)/.exec(ln); fmtInt = +m[1]; fmtDec = +m[2]; explicitFmt = true; continue; }
+      if (ln.startsWith(";")) continue;
+      if (/^(METRIC|M71)/.test(ln)){ unit = 1; if (!explicitFmt){ fmtInt = 3; fmtDec = 3; } if (/TZ/.test(ln)) zeros = "TZ"; if (/LZ/.test(ln)) zeros = "LZ"; continue; }
+      if (/^(INCH|M72)/.test(ln)){ unit = 25.4; if (!explicitFmt){ fmtInt = 2; fmtDec = 4; } if (/TZ/.test(ln)) zeros = "TZ"; if (/LZ/.test(ln)) zeros = "LZ"; continue; }
+      if (ln === "%" || ln === "M95"){ header = false; continue; }
+      const td = /^T(\d+)(?:[FSB][\d.]+)*C([\d.]+)/.exec(ln);
+      if (td){ tools[+td[1]] = parseFloat(td[2]) * unit; if (!header) tool = +td[1]; continue; }
+      const ts = /^T(\d+)$/.exec(ln); if (ts){ tool = +ts[1]; continue; }
+      if (/^M30/.test(ln)) break;
+      const cm = /^(?:G\d+)?X?([+-]?[\d.]+)?Y?([+-]?[\d.]+)?/.exec(ln);
+      const xm = /X([+-]?[\d.]+)/.exec(ln), ym = /Y([+-]?[\d.]+)/.exec(ln);
+      if (!xm && !ym) continue;
+      const conv = s => {
+        if (s.includes(".")) return parseFloat(s) * unit;
+        const neg = s[0] === "-"; let t = s.replace(/^[+-]/, "");
+        if (zeros === "LZ"){ while (t.length < fmtInt + fmtDec) t += "0"; } // zeros à esquerda mantidos: completa à direita
+        return (neg ? -1 : 1) * parseInt(t, 10) / Math.pow(10, fmtDec) * unit;
+      };
+      const firstPart = ln.split("G85")[0];
+      const fx = /X([+-]?[\d.]+)/.exec(firstPart), fy = /Y([+-]?[\d.]+)/.exec(firstPart);
+      if (fx) lastX = conv(fx[1]); if (fy) lastY = conv(fy[1]);
+      if (tool !== null && tools[tool] !== undefined && !/^G0[0-3]/.test(ln)) holes.push({x:lastX, y:lastY, d:tools[tool], plated});
+    }
+    return holes;
+  }
+
+  // ---------- KiCad .kicad_pcb (expressões S) ----------
+  function sexpr(text){
+    const re = /\(|\)|"(?:[^"\\]|\\.)*"|[^\s()"]+/g; let m; const stack = [[]];
+    while ((m = re.exec(text))){
+      const t = m[0];
+      if (t === "(") stack.push([]);
+      else if (t === ")"){ const l = stack.pop(); stack[stack.length-1].push(l); }
+      else stack[stack.length-1].push(t[0] === '"' ? t.slice(1, -1) : t);
+    }
+    return stack[0][0];
+  }
+  const kids = (n, name) => (n || []).filter(c => Array.isArray(c) && c[0] === name);
+  const kid = (n, name) => kids(n, name)[0];
+  const nums = (n, from) => (n || []).slice(from || 1).map(parseFloat);
+  function parseKiCad(text){
+    const root = sexpr(text); if (!root || root[0] !== "kicad_pcb") throw new Error("não é um arquivo .kicad_pcb");
+    const layerDefs = (kid(root, "layers") || []).slice(1).filter(Array.isArray).map(l => ({num:l[0], name:l[1], type:l[2]}));
+    const cuNames = layerDefs.filter(l => /\.Cu$/.test(l.name)).map(l => l.name);
+    const L = {}; const get = (name) => {
+      if (!L[name]){
+        const role = name === "F.Cu" ? "top" : name === "B.Cu" ? "bottom" : /^In\d+\.Cu$/.test(name) ? "inner" :
+          /^F\.Mask/.test(name) ? "mask_top" : /^B\.Mask/.test(name) ? "mask_bot" : /^F\.Silk/.test(name) ? "silk_top" : /^B\.Silk/.test(name) ? "silk_bot" :
+          name === "Edge.Cuts" ? "outline" : /Paste/.test(name) ? "paste" : "ignore";
+        L[name] = {id:name, name, file:"", role, prims:[], holes:[], declared:/\.Cu$/.test(name)};
+      }
+      return L[name];
+    };
+    cuNames.forEach(get);
+    const Y = v => -v; // KiCad usa Y para baixo
+    const width = n => { const w = kid(n, "width"); if (w) return parseFloat(w[1]); const s = kid(n, "stroke"); if (s && kid(s, "width")) return parseFloat(kid(s, "width")[1]); return 0.12; };
+    const layerOf = n => { const l = kid(n, "layer"); return l ? l[1] : null; };
+    const expandLayers = list => { const out = []; for (const l of list){ if (l === "*.Cu") out.push(...cuNames); else if (l === "F&B.Cu") out.push("F.Cu", "B.Cu"); else if (/^\*\./.test(l)) { out.push("F" + l.slice(1), "B" + l.slice(1)); } else out.push(l); } return out; };
+    const drillHoles = [];
+    function graphics(n, tf, prefix){
+      for (const g of n){
+        if (!Array.isArray(g)) continue;
+        const kind = g[0]; if (!kind || !kind.startsWith(prefix)) continue;
+        const ln = layerOf(g); if (!ln) continue;
+        const lay = get(ln), w = width(g) || 0.1, sub = kind.slice(prefix.length);
+        const P = k => { const v = kid(g, k); return v ? tf(parseFloat(v[1]), parseFloat(v[2])) : null; };
+        if (sub === "line") lay.prims.push({t:"line", ...seg(P("start"), P("end")), w});
+        else if (sub === "rect"){ const a = P("start"), b = P("end"); const c1 = tf.raw ? null : null; const s0 = kid(g, "start"), e0 = kid(g, "end"); const p = [[+s0[1], +s0[2]], [+e0[1], +s0[2]], [+e0[1], +e0[2]], [+s0[1], +e0[2]]].map(q => tf(q[0], q[1])); polyToLines(p, w, lay.prims, true); }
+        else if (sub === "circle"){ const c = P("center"), e = P("end"); const r = Math.hypot(e[0]-c[0], e[1]-c[1]); polyToLines(arcPts(c[0], c[1], r, 0, Math.PI*2 - 1e-6, true), w, lay.prims, true); }
+        else if (sub === "arc"){ const s = P("start"), m = P("mid"), e = P("end");
+          if (m) polyToLines(arc3(s, m, e), w, lay.prims, false);
+          else { const ang = kid(g, "angle"); if (s && e && ang){ const c = s, st = e, r = Math.hypot(st[0]-c[0], st[1]-c[1]), a0 = Math.atan2(st[1]-c[1], st[0]-c[0]), sw = parseFloat(ang[1]) * Math.PI/180; polyToLines(arcPts(c[0], c[1], r, a0, a0 - sw, sw < 0), w, lay.prims, false); } } }
+        else if (sub === "poly"){ const pts = kids(kid(g, "pts"), "xy").map(q => tf(parseFloat(q[1]), parseFloat(q[2]))); if (pts.length > 2){ const fill = kid(g, "fill"); if (lay.role === "outline" || (fill && fill[1] === "none")) polyToLines(pts, w, lay.prims, true); else lay.prims.push({t:"region", pts}); } }
+      }
+    }
+    const seg = (a, b) => ({x1:a[0], y1:a[1], x2:b[0], y2:b[1]});
+    const globalTf = (x, y) => [x, Y(y)];
+    graphics(root, globalTf, "gr_");
+    for (const fp of root.filter(n => Array.isArray(n) && (n[0] === "footprint" || n[0] === "module"))){
+      const at = kid(fp, "at"), fx = parseFloat(at[1]), fy = parseFloat(at[2]), fa = (parseFloat(at[3]) || 0) * Math.PI/180;
+      const tf = (x, y) => { const rx = x*Math.cos(fa) + y*Math.sin(fa), ry = -x*Math.sin(fa) + y*Math.cos(fa); return [fx + rx, Y(fy + ry)]; };
+      graphics(fp, tf, "fp_");
+      for (const pad of kids(fp, "pad")){
+        const type = pad[2], shape = pad[3], pat = kid(pad, "at"), sz = kid(pad, "size");
+        const [px, py] = tf(parseFloat(pat[1]), parseFloat(pat[2])), rot = parseFloat(pat[3]) || 0;
+        const w = sz ? parseFloat(sz[1]) : 1, h = sz ? parseFloat(sz[2]) : 1;
+        const sh = shape === "circle" ? "C" : shape === "oval" ? "O" : "R";
+        const lays = expandLayers((kid(pad, "layers") || []).slice(1));
+        if (type !== "np_thru_hole") for (const ln of lays){ if (/\.Cu$/.test(ln) && cuNames.includes(ln)) get(ln).prims.push({t:"flash", shape:sh, x:px, y:py, w, h, rot, pad:true}); else if (/Mask/.test(ln)) get(ln).prims.push({t:"flash", shape:sh, x:px, y:py, w, h, rot}); }
+        const dr = kid(pad, "drill");
+        if (dr && (type === "thru_hole" || type === "np_thru_hole")){ const vals = dr.slice(1).filter(v => !Array.isArray(v) && v !== "oval").map(parseFloat); if (vals.length && vals[0] > 0) drillHoles.push({x:px, y:py, d:vals[0], plated:type === "thru_hole"}); }
+      }
+    }
+    for (const s of kids(root, "segment")){ const a = kid(s, "start"), b = kid(s, "end"), ln = layerOf(s); if (!ln) continue; get(ln).prims.push({t:"line", x1:+a[1], y1:Y(+a[2]), x2:+b[1], y2:Y(+b[2]), w:width(s)}); }
+    for (const s of kids(root, "arc")){ const a = kid(s, "start"), m = kid(s, "mid"), b = kid(s, "end"), ln = layerOf(s); if (!ln || !m) continue; polyToLines(arc3([+a[1], Y(+a[2])], [+m[1], Y(+m[2])], [+b[1], Y(+b[2])]), width(s), get(ln).prims, false); }
+    for (const v of kids(root, "via")){ const at = kid(v, "at"), size = parseFloat((kid(v, "size") || [0, 0.6])[1]), dr = parseFloat((kid(v, "drill") || [0, 0.3])[1]);
+      const x = +at[1], y = Y(+at[2]); let ls = (kid(v, "layers") || []).slice(1); const span = ls.length === 2 ? cuNames.slice(Math.max(0, cuNames.indexOf(ls[0])), cuNames.indexOf(ls[1]) + 1) : cuNames;
+      for (const ln of (span.length ? span : cuNames)) get(ln).prims.push({t:"flash", shape:"C", x, y, w:size, h:size, via:true});
+      drillHoles.push({x, y, d:dr, plated:true}); }
+    for (const z of kids(root, "zone")){ const zl = layerOf(z);
+      for (const fpoly of kids(z, "filled_polygon")){ const ln = layerOf(fpoly) || zl; if (!ln) continue; const pts = kids(kid(fpoly, "pts"), "xy").map(q => [parseFloat(q[1]), Y(parseFloat(q[2]))]); if (pts.length > 2) get(ln).prims.push({t:"region", pts}); } }
+    const drill = {id:"drill", name:"Furação (pads e vias)", file:"", role:"drill", prims:[], holes:drillHoles};
+    const layers = Object.values(L).filter(l => l.prims.length || l.declared).concat(drillHoles.length ? [drill] : []);
+    return {source:"KiCad", layers, notes:[cuNames.length + " camadas de cobre declaradas no arquivo"]};
+  }
+
+  // ---------- Eagle .brd (XML) ----------
+  function parseEagle(text){
+    if (!/^\s*<\?xml|<eagle/i.test(text)) throw new Error("arquivo .brd binário (Eagle anterior à versão 6). Abra no Eagle e salve de novo, ou exporte os Gerbers");
+    const doc = new DOMParser().parseFromString(text, "application/xml");
+    if (doc.querySelector("parsererror")) throw new Error("XML do Eagle inválido");
+    let setup = [1, 16];
+    const ls = doc.querySelector('designrules param[name="layerSetup"]');
+    if (ls){ const v = (ls.getAttribute("value").match(/\d+/g) || []).map(Number).filter(n => n >= 1 && n <= 16); if (v.length) setup = [...new Set(v)].sort((a, b) => a - b); }
+    const names = {}; doc.querySelectorAll("layers layer").forEach(l => names[+l.getAttribute("number")] = l.getAttribute("name"));
+    const L = {}; const role = n => n === 1 ? "top" : n === 16 ? "bottom" : (n >= 2 && n <= 15) ? "inner" : n === 20 ? "outline" : n === 21 ? "silk_top" : n === 22 ? "silk_bot" : n === 29 ? "mask_top" : n === 30 ? "mask_bot" : n === 31 || n === 32 ? "paste" : "ignore";
+    const get = n => L[n] || (L[n] = {id:"L" + n, name:(names[n] || "Layer") + " (" + n + ")", file:"", role:role(n), prims:[], holes:[], declared:setup.includes(n)});
+    setup.forEach(get);
+    const f = (el, a, d) => { const v = el.getAttribute(a); return v === null ? d : parseFloat(v); };
+    const holes = [];
+    const pkgs = {};
+    doc.querySelectorAll("libraries library").forEach(lib => lib.querySelectorAll("packages package").forEach(p => pkgs[lib.getAttribute("name") + "\u0000" + p.getAttribute("name")] = p));
+    function rotSpec(s){ s = s || "R0"; return {mirror:/M/.test(s), ang:(parseFloat(s.replace(/[^\d.]/g, "")) || 0) * Math.PI/180}; }
+    function wireTo(el, tf, layerMap){
+      const n = layerMap(+el.getAttribute("layer")), a = tf(f(el, "x1"), f(el, "y1")), b = tf(f(el, "x2"), f(el, "y2")), w = f(el, "width", 0.1), curve = f(el, "curve", 0);
+      if (curve){ const ch = Math.hypot(b[0]-a[0], b[1]-a[1]), th = curve*Math.PI/180, r = ch / (2*Math.sin(Math.abs(th)/2)), mx = (a[0]+b[0])/2, my = (a[1]+b[1])/2, dd = r*Math.cos(th/2);
+        const nx = -(b[1]-a[1])/ch, ny = (b[0]-a[0])/ch, sgn = th > 0 ? 1 : -1, cx = mx + nx*dd*sgn, cy = my + ny*dd*sgn;
+        polyToLines(arcPts(cx, cy, Math.abs(r), Math.atan2(a[1]-cy, a[0]-cx), Math.atan2(b[1]-cy, b[0]-cx), th > 0), w || 0.1, get(n).prims, false); }
+      else get(n).prims.push({t:"line", x1:a[0], y1:a[1], x2:b[0], y2:b[1], w:w || 0.1});
+    }
+    const id = n => n;
+    doc.querySelectorAll("plain > wire").forEach(w => wireTo(w, (x, y) => [x, y], id));
+    doc.querySelectorAll("plain > hole").forEach(h => holes.push({x:f(h, "x"), y:f(h, "y"), d:f(h, "drill"), plated:false}));
+    doc.querySelectorAll("signals signal").forEach(sig => {
+      sig.querySelectorAll(":scope > wire").forEach(w => wireTo(w, (x, y) => [x, y], id));
+      sig.querySelectorAll(":scope > via").forEach(v => { const x = f(v, "x"), y = f(v, "y"), dr = f(v, "drill", 0.3), dia = f(v, "diameter", 0) || dr*1.8; const ext = (v.getAttribute("extent") || "1-16").split("-").map(Number);
+        setup.filter(n => n >= Math.min(...ext) && n <= Math.max(...ext)).forEach(n => get(n).prims.push({t:"flash", shape:"C", x, y, w:dia, h:dia, via:true})); holes.push({x, y, d:dr, plated:true}); });
+      sig.querySelectorAll(":scope > polygon").forEach(p => { const pts = [...p.querySelectorAll("vertex")].map(v => [f(v, "x"), f(v, "y")]); if (pts.length > 2) get(+p.getAttribute("layer")).prims.push({t:"region", pts, pour:true}); });
+    });
+    doc.querySelectorAll("elements element").forEach(el => {
+      const pk = pkgs[el.getAttribute("library") + "\u0000" + el.getAttribute("package")]; if (!pk) return;
+      const ex = f(el, "x"), ey = f(el, "y"), r = rotSpec(el.getAttribute("rot"));
+      const tf = (x, y) => { if (r.mirror) x = -x; return [ex + x*Math.cos(r.ang) - y*Math.sin(r.ang), ey + x*Math.sin(r.ang) + y*Math.cos(r.ang)]; };
+      const lm = n => { if (!r.mirror) return n; const swap = {1:16, 16:1, 21:22, 22:21, 29:30, 30:29, 31:32, 32:31}; return swap[n] || n; };
+      pk.querySelectorAll("wire").forEach(w => wireTo(w, tf, lm));
+      pk.querySelectorAll("smd").forEach(s => { const [x, y] = tf(f(s, "x"), f(s, "y")), pr = rotSpec(s.getAttribute("rot")); const n = lm(+s.getAttribute("layer"));
+        get(n).prims.push({t:"flash", shape:f(s, "roundness", 0) >= 100 ? "O" : "R", x, y, w:f(s, "dx"), h:f(s, "dy"), rot:(r.ang + pr.ang) * 180/Math.PI * (r.mirror ? -1 : 1), pad:true}); });
+      pk.querySelectorAll("pad").forEach(p => { const [x, y] = tf(f(p, "x"), f(p, "y")), dr = f(p, "drill", 0.8), dia = f(p, "diameter", 0) || dr*1.7, shape = p.getAttribute("shape") || "round";
+        setup.forEach(n => get(n).prims.push({t:"flash", shape:shape === "square" ? "R" : shape === "long" ? "O" : "C", x, y, w:shape === "long" ? dia*2 : dia, h:dia, rot:r.ang*180/Math.PI, pad:true})); holes.push({x, y, d:dr, plated:true}); });
+      pk.querySelectorAll("hole").forEach(h => { const [x, y] = tf(f(h, "x"), f(h, "y")); holes.push({x, y, d:f(h, "drill"), plated:false}); });
+    });
+    const layers = Object.values(L).filter(l => l.prims.length || l.declared);
+    if (holes.length) layers.push({id:"drill", name:"Furação (pads, vias e furos)", file:"", role:"drill", prims:[], holes});
+    return {source:"Eagle", layers, notes:[setup.length + " camadas de cobre na configuração do Eagle"]};
+  }
+
+  // ---------- leitura de .zip sem biblioteca externa ----------
+  async function unzip(buf){
+    const dv = new DataView(buf), u8 = new Uint8Array(buf); let eocd = -1;
+    for (let i = buf.byteLength - 22; i >= Math.max(0, buf.byteLength - 66000); i--) if (dv.getUint32(i, true) === 0x06054b50){ eocd = i; break; }
+    if (eocd < 0) throw new Error("zip inválido");
+    const n = dv.getUint16(eocd + 10, true); let p = dv.getUint32(eocd + 16, true); const out = [];
+    for (let k = 0; k < n; k++){
+      if (dv.getUint32(p, true) !== 0x02014b50) break;
+      const method = dv.getUint16(p + 10, true), csize = dv.getUint32(p + 20, true), nlen = dv.getUint16(p + 28, true), elen = dv.getUint16(p + 30, true), clen = dv.getUint16(p + 32, true), off = dv.getUint32(p + 42, true);
+      const name = new TextDecoder().decode(u8.subarray(p + 46, p + 46 + nlen)); p += 46 + nlen + elen + clen;
+      if (name.endsWith("/") || /__MACOSX|\/\._/.test(name)) continue;
+      const lnl = dv.getUint16(off + 26, true), lel = dv.getUint16(off + 28, true), start = off + 30 + lnl + lel, data = u8.subarray(start, start + csize);
+      let bytes;
+      if (method === 0) bytes = data;
+      else if (method === 8){ const ds = new DecompressionStream("deflate-raw"); const stream = new Blob([data]).stream().pipeThrough(ds); bytes = new Uint8Array(await new Response(stream).arrayBuffer()); }
+      else continue;
+      out.push({name:name.split("/").pop(), text:new TextDecoder().decode(bytes)});
+    }
+    return out;
+  }
+
+  // ---------- montagem a partir de vários arquivos Gerber/Excellon ----------
+  function fromGerberFiles(files){
+    const layers = [], notes = [];
+    files.forEach((f, idx) => {
+      const t = f.text, isDrill = /^\s*M48/m.test(t) || (/^T\d+C[\d.]+/m.test(t) && !/%FS/.test(t));
+      const isGerber = /%FS|%MO|G04|%ADD/.test(t);
+      if (!isDrill && !isGerber){ notes.push(f.name + ": formato não reconhecido (ignorado)"); return; }
+      try {
+        if (isDrill){ const holes = parseExcellon(t, f.name); layers.push({id:"f" + idx, name:f.name, file:f.name, role:"drill", prims:[], holes}); }
+        else { const role = roleFromX2(t) || roleFromName(f.name) || "ignore"; layers.push({id:"f" + idx, name:f.name, file:f.name, role, prims:parseGerber(t), holes:[]}); }
+      } catch(e){ notes.push(f.name + ": erro de leitura (" + e.message + ")"); }
+    });
+    // ordem lógica para a tabela de camadas
+    const order = ["top", "inner", "bottom", "mask_top", "mask_bot", "silk_top", "silk_bot", "outline", "drill", "paste", "ignore"];
+    layers.sort((a, b) => order.indexOf(a.role) - order.indexOf(b.role) || a.name.localeCompare(b.name));
+    return {source:"Gerber", layers, notes};
+  }
+
+  async function load(fileList){
+    const items = [];
+    for (const file of fileList){
+      const ext = file.name.split(".").pop().toLowerCase();
+      if (ext === "zip"){ (await unzip(await file.arrayBuffer())).forEach(e => items.push(e)); }
+      else items.push({name:file.name, text:await file.text()});
+    }
+    const kc = items.find(i => /\.kicad_pcb$/i.test(i.name)); if (kc) return parseKiCad(kc.text);
+    const eg = items.find(i => /\.brd$/i.test(i.name)); if (eg) return parseEagle(eg.text);
+    const gb = items.filter(i => !/\.(pdf|png|jpe?g|txt\.bak|csv|pos|rpt|md|html?|json|kicad_pro|kicad_sch|sch|bom|xlsx?)$/i.test(i.name) || /\.txt$/i.test(i.name));
+    if (!gb.length) throw new Error("nenhum arquivo de PCB encontrado");
+    return fromGerberFiles(gb);
+  }
+
+  // ---------- análise da placa ----------
+  function analyze(board){
+    const L = board.layers;
+    const cu = L.filter(l => COPPER(l.role) && (l.prims.length || l.declared));
+    const outline = L.filter(l => l.role === "outline");
+    let bb = null; outline.forEach(l => bb = union(bb, bbox(l.prims, null, true)));
+    let usedOutline = !!bb;
+    if (!bb){ cu.forEach(l => bb = union(bb, bbox(l.prims))); L.filter(l => l.role === "drill").forEach(l => bb = union(bb, bbox(null, l.holes))); }
+    const holes = []; L.filter(l => l.role === "drill").forEach(l => holes.push(...l.holes));
+    let minTrack = Infinity; cu.forEach(l => l.prims.forEach(p => { if (p.t === "line" && !p.clear && p.w > 0.01 && p.w < minTrack) minTrack = p.w; }));
+    let minDrill = Infinity; holes.forEach(h => { if (h.d > 0 && h.d < minDrill) minDrill = h.d; });
+    const w = bb ? bb[2] - bb[0] : 0, h = bb ? bb[3] - bb[1] : 0;
+    return {bb, w, h, usedOutline, copper:cu.length, holes:holes.length, plated:holes.filter(x => x.plated).length,
+      minTrack:minTrack === Infinity ? null : minTrack, minDrill:minDrill === Infinity ? null : minDrill,
+      hasTop:cu.some(l => l.role === "top"), hasBottom:cu.some(l => l.role === "bottom"), inner:cu.filter(l => l.role === "inner").length};
+  }
+
+  return {ROLES, COPPER, load, analyze, parseGerber, parseExcellon, parseKiCad, parseEagle, fromGerberFiles, unzip, bbox, union};
+})();
+if (typeof module !== "undefined") module.exports = PCB;
+
+</script>
+<script>
+(function(){
+  const EMAIL = "contato@zirconiumlabs.com";
+  const $ = id => document.getElementById(id);
+  const brl = v => "R$ " + v.toLocaleString("pt-BR", {minimumFractionDigits:2, maximumFractionDigits:2});
+  const brl0 = v => "R$ " + Math.round(v).toLocaleString("pt-BR");
+  const f1 = v => v.toLocaleString("pt-BR", {minimumFractionDigits:1, maximumFractionDigits:1});
+  const f2 = v => v.toLocaleString("pt-BR", {minimumFractionDigits:2, maximumFractionDigits:2});
+  const intv = id => Math.max(1, Math.round(parseFloat($(id).value) || 1));
+
+  // ================= preços (plano operacional, Linha B) =================
+  const PANEL = {w:200, h:100};
+  const TIPOS = {"1F":{n:"1 camada", setup:140, pp:115, d:[2, 3]}, "2F":{n:"Dupla face (PTH)", setup:320, pp:235, d:[3, 5]}, "4L":{n:"Multilayer 4 camadas", setup:590, pp:450, d:[7, 10]}};
+  const FUROS_POR_PAINEL = 300, FURO_EXTRA = 0.05, LAUDO_1F = 40, URG = 1.5, SHARED_MIN = 0.25, SHARED_DIAS = 7;
+  const DFM = {trilha:0.2, furo:0.4}; // regras mínimas usadas no aviso (a confirmar com o processo)
+  const MASK = {verde:{n:"Verde", c:"#1F6B3A"}, azulr:{n:"Azul ultrarrápido", c:"#1D4E89"}, azul:{n:"Azul", c:"#1D4E89"}, vermelho:{n:"Vermelho", c:"#8E2323"}, preto:{n:"Preto", c:"#1A1D1C"}};
+
+  const st = {board:null, an:null, files:[], view:"top", last:null, frete:null, cam:null};
+
+  // ================= placa de exemplo (Gerbers gerados aqui e lidos pelo mesmo leitor) =================
+  function exampleBoard(){
+    const c = v => String(Math.round(v*1e6));
+    const H = ff => `G04 VIA72 exemplo*\n%FSLAX46Y46*%\n%MOMM*%\n%TF.FileFunction,${ff}*%\n%ADD10C,0.25*%\n%ADD11R,1.7X1.7*%\n%ADD12C,1.7*%\n%ADD13C,0.8*%\n%ADD14R,1.5X0.6*%\n%ADD15C,0.15*%\n%ADD16R,1.0X1.3*%\n%ADD17C,0.4*%\n%ADD18C,3.2*%\n`;
+    const W = 54, Hh = 34;
+    let top = H("Copper,L1,Top"), bot = H("Copper,L2,Bot"), silk = H("Legend,Top"), mask = H("Soldermask,Top");
+    const pads = []; // conector de 6 pinos
+    top += "D11*\n" + `X${c(5)}Y${c(8)}D03*\n` + "D12*\n";
+    for (let k = 1; k < 6; k++) top += `X${c(5)}Y${c(8 + 2.54*k)}D03*\n`;
+    for (let k = 0; k < 6; k++) pads.push([5, 8 + 2.54*k]);
+    top += "D14*\n"; const soic = [];
+    for (let k = 0; k < 4; k++){ top += `X${c(24)}Y${c(12 + 1.27*k)}D03*\nX${c(31)}Y${c(12 + 1.27*k)}D03*\n`; soic.push([24, 12 + 1.27*k], [31, 12 + 1.27*k]); }
+    top += "D16*\n"; const smd = [[42, 24], [44, 24], [42, 12], [44, 12], [38, 28], [40, 28]];
+    smd.forEach(p => top += `X${c(p[0])}Y${c(p[1])}D03*\n`);
+    const vias = [[16, 26], [36, 8], [47, 18], [19, 6]];
+    top += "D13*\n"; vias.forEach(v => top += `X${c(v[0])}Y${c(v[1])}D03*\n`);
+    const tr = (pts) => { let s = "D10*\n" + `X${c(pts[0][0])}Y${c(pts[0][1])}D02*\n`; for (let i = 1; i < pts.length; i++) s += `X${c(pts[i][0])}Y${c(pts[i][1])}D01*\n`; return s; };
+    top += tr([[5, 8], [12, 8], [16, 12], [24, 12]]) + tr([[5, 10.54], [11, 10.54], [13.5, 13.27], [24, 13.27]]) + tr([[5, 13.08], [10, 13.08], [12, 14.54], [24, 14.54]]);
+    top += tr([[31, 12], [36, 12], [36, 8]]) + tr([[31, 13.27], [38, 13.27], [42, 12]]) + tr([[31, 15.81], [35, 15.81], [38, 19], [38, 22], [42, 24]]) + tr([[44, 24], [47, 21], [47, 18]]);
+    top += tr([[5, 20.7], [12, 20.7], [16, 24.7], [16, 26]]) + tr([[24, 15.81], [21, 18.81], [21, 26], [24, 28], [38, 28]]) + tr([[44, 12], [47, 12], [47, 9], [44, 6], [19, 6]]);
+    top += "M02*\n";
+    // base: plano de terra com alívios em volta dos furos
+    bot += `G36*\nX${c(1.5)}Y${c(1.5)}D02*\nX${c(W-1.5)}Y${c(1.5)}D01*\nX${c(W-1.5)}Y${c(Hh-1.5)}D01*\nX${c(1.5)}Y${c(Hh-1.5)}D01*\nX${c(1.5)}Y${c(1.5)}D01*\nG37*\n`;
+    bot += "%LPC*%\n%ADD19C,2.6*%\n%ADD20C,1.4*%\n%ADD21C,4.4*%\nD19*\n"; pads.forEach(p => bot += `X${c(p[0])}Y${c(p[1])}D03*\n`);
+    bot += "D20*\n"; vias.forEach(v => bot += `X${c(v[0])}Y${c(v[1])}D03*\n`);
+    bot += "D21*\n" + `X${c(3.5)}Y${c(Hh-3.5)}D03*\nX${c(W-3.5)}Y${c(Hh-3.5)}D03*\nX${c(W-3.5)}Y${c(3.5)}D03*\n`;
+    bot += "%LPD*%\nD12*\n"; pads.forEach(p => bot += `X${c(p[0])}Y${c(p[1])}D03*\n`);
+    bot += "D13*\n"; vias.forEach(v => bot += `X${c(v[0])}Y${c(v[1])}D03*\n`);
+    bot += "%ADD22C,0.5*%\nD22*\n" + `X${c(16)}Y${c(26)}D02*\nX${c(16)}Y${c(30)}D01*\nX${c(30)}Y${c(30)}D01*\n` + "M02*\n";
+    // legenda
+    const box = (x0, y0, x1, y1) => `X${c(x0)}Y${c(y0)}D02*\nX${c(x1)}Y${c(y0)}D01*\nX${c(x1)}Y${c(y1)}D01*\nX${c(x0)}Y${c(y1)}D01*\nX${c(x0)}Y${c(y0)}D01*\n`;
+    silk += "D15*\n" + box(3.4, 6.4, 6.6, 22.6) + box(25.3, 10.8, 29.7, 17.2) + `X${c(26)}Y${c(16.4)}D02*\nX${c(26)}Y${c(16.4)}D01*\n` + box(40.9, 22.9, 45.1, 25.1) + box(40.9, 10.9, 45.1, 13.1) + box(36.9, 26.9, 41.1, 29.1);
+    silk += "%ADD23C,0.2*%\nD23*\n" + `X${c(10)}Y${c(30)}D02*\nX${c(13)}Y${c(30)}D01*\nX${c(13)}Y${c(31.5)}D01*\nX${c(11)}Y${c(31.5)}D01*\n` + "M02*\n";
+    mask += "D11*\n" + `X${c(5)}Y${c(8)}D03*\n` + "M02*\n";
+    const edge = H("Profile,NP") + "D15*\n" + box(0, 0, W, Hh) + "M02*\n";
+    let pth = "M48\nMETRIC,TZ\nT1C1.000\nT2C0.400\n%\nT1\n"; pads.forEach(p => pth += `X${p[0].toFixed(3)}Y${p[1].toFixed(3)}\n`);
+    pth += "T2\n"; vias.forEach(v => pth += `X${v[0].toFixed(3)}Y${v[1].toFixed(3)}\n`); pth += "M30\n";
+    const npth = `M48\nMETRIC\nT1C3.200\n%\nT1\nX3.5Y${Hh-3.5}\nX${W-3.5}Y${Hh-3.5}\nX${W-3.5}Y3.5\nM30\n`;
+    return PCB.fromGerberFiles([{name:"exemplo-F_Cu.gtl", text:top}, {name:"exemplo-B_Cu.gbl", text:bot}, {name:"exemplo-F_Mask.gts", text:mask},
+      {name:"exemplo-F_Silkscreen.gto", text:silk}, {name:"exemplo-Edge_Cuts.gm1", text:edge}, {name:"exemplo-PTH.drl", text:pth}, {name:"exemplo-NPTH.drl", text:npth}]);
+  }
+
+  // ================= visualizador 2D =================
+  const cv = $("pcbView"), ctx = cv.getContext("2d");
+  const off = document.createElement("canvas"), octx = off.getContext("2d");
+  const INNER = ["#E3B341", "#B062D9", "#4CC38A", "#E58A3D", "#5BC0DE", "#D95B9B"];
+  function layerColor(l){
+    const inner = st.board ? st.board.layers.filter(x => x.role === "inner") : [];
+    return {top:"#E5533D", bottom:"#3D8BE5", inner:INNER[Math.max(0, inner.indexOf(l)) % INNER.length], mask_top:"#2E8B6F", mask_bot:"#2E6F8B",
+      silk_top:"#F2F2F2", silk_bot:"#A9C4D9", outline:"#F2D16B", drill:"#FFFFFF", paste:"#8A8A8A", ignore:"#6B6B6B"}[l.role] || "#888";
+  }
+  function shapePts(p){
+    const w = p.w/2, h = p.h/2, rot = (p.rot || 0) * Math.PI/180, out = [];
+    if (p.shape === "O"){ const r = Math.min(w, h), lx = w - r, ly = h - r;
+      const cs = lx > 0 ? [[lx, 0], [-lx, 0]] : [[0, ly], [0, -ly]], a0 = lx > 0 ? -Math.PI/2 : 0;
+      for (let k = 0; k <= 10; k++){ const a = a0 + Math.PI*k/10; out.push([cs[0][0] + r*Math.cos(a), cs[0][1] + r*Math.sin(a)]); }
+      for (let k = 0; k <= 10; k++){ const a = a0 + Math.PI + Math.PI*k/10; out.push([cs[1][0] + r*Math.cos(a), cs[1][1] + r*Math.sin(a)]); } }
+    else if (p.shape === "P"){ const n = p.n || 6; for (let k = 0; k < n; k++){ const a = 2*Math.PI*k/n; out.push([w*Math.cos(a), w*Math.sin(a)]); } }
+    else out.push([-w, -h], [w, -h], [w, h], [-w, h]);
+    return out.map(([x, y]) => [p.x + x*Math.cos(rot) - y*Math.sin(rot), p.y + x*Math.sin(rot) + y*Math.cos(rot)]);
+  }
+  function paths(l){ // grupos na ordem do arquivo, para respeitar a polaridade clara/escura do Gerber
+    if (l._p) return l._p;
+    const groups = []; let g = null;
+    const newG = clear => ({clear, strokes:new Map(), flash:new Path2D(), region:new Path2D()});
+    for (const p of l.prims){
+      const c = !!p.clear; if (!g || g.clear !== c){ g = newG(c); groups.push(g); }
+      if (p.t === "line"){ const w = Math.max(p.w, 0.05); let s = g.strokes.get(w); if (!s){ s = new Path2D(); g.strokes.set(w, s); } s.moveTo(p.x1, p.y1); s.lineTo(p.x2, p.y2); }
+      else if (p.t === "flash"){ if (p.shape === "C"){ g.flash.moveTo(p.x + p.w/2, p.y); g.flash.arc(p.x, p.y, p.w/2, 0, Math.PI*2); } else { const q = shapePts(p); g.flash.moveTo(q[0][0], q[0][1]); q.slice(1).forEach(v => g.flash.lineTo(v[0], v[1])); g.flash.closePath(); } }
+      else if (p.t === "region"){ g.region.moveTo(p.pts[0][0], p.pts[0][1]); p.pts.slice(1).forEach(v => g.region.lineTo(v[0], v[1])); g.region.closePath(); }
+    }
+    const holes = new Path2D(); for (const h of l.holes){ holes.moveTo(h.x + h.d/2, h.y); holes.arc(h.x, h.y, h.d/2, 0, Math.PI*2); }
+    return (l._p = {groups, holes});
+  }
+  function transformFor(mirror){ const k = st.cam, s = k.s * k.dpr; return mirror ? [-s, 0, 0, -s, cv.width/2 + k.cx*s, cv.height/2 + k.cy*s] : [s, 0, 0, -s, cv.width/2 - k.cx*s, cv.height/2 + k.cy*s]; }
+  function drawLayer(target, l, mirror, colors){ // colors: {line, flash, region}
+    const P = paths(l), T = transformFor(mirror);
+    octx.setTransform(1, 0, 0, 1, 0, 0); octx.clearRect(0, 0, off.width, off.height);
+    octx.setTransform(...T); octx.lineCap = "round"; octx.lineJoin = "round";
+    const paint = (g, comp) => { octx.globalCompositeOperation = comp;
+      octx.fillStyle = colors.region; octx.fill(g.region, "nonzero");
+      for (const [w, s] of g.strokes){ octx.strokeStyle = colors.line; octx.lineWidth = w; octx.stroke(s); }
+      octx.fillStyle = colors.flash; octx.fill(g.flash); };
+    for (const g of P.groups) paint(g, g.clear ? "destination-out" : "source-over");
+    octx.globalCompositeOperation = "source-over";
+    target.setTransform(1, 0, 0, 1, 0, 0); target.globalAlpha = colors.alpha ?? 1; target.drawImage(off, 0, 0); target.globalAlpha = 1;
+  }
+  function mix(a, b, t){ const p = s => [1, 3, 5].map(i => parseInt(s.slice(i, i + 2), 16)); const A = p(a), B = p(b); return "rgb(" + A.map((v, i) => Math.round(v + (B[i] - v)*t)).join(",") + ")"; }
+  function render(){
+    const el = $("viewer"), dpr = Math.min(window.devicePixelRatio || 1, 2), W = el.clientWidth, H = el.clientHeight;
+    if (cv.width !== Math.round(W*dpr) || cv.height !== Math.round(H*dpr)){ cv.width = off.width = Math.round(W*dpr); cv.height = off.height = Math.round(H*dpr); }
+    if (!st.cam) fit(); st.cam.dpr = dpr;
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = "#0B1714"; ctx.fillRect(0, 0, cv.width, cv.height);
+    if (!st.board) return;
+    const L = st.board.layers.filter(l => l.visible !== false), view = st.view, an = st.an;
+    const holes = []; st.board.layers.filter(l => l.role === "drill" && l.visible !== false).forEach(l => holes.push(l));
+    if (view === "layers"){
+      const order = ["bottom", "inner", "top", "mask_bot", "mask_top", "silk_bot", "silk_top", "paste", "ignore", "outline"];
+      for (const r of order) for (const l of L.filter(x => x.role === r)){ const col = layerColor(l); drawLayer(ctx, l, false, {line:col, flash:col, region:col, alpha:r.startsWith("mask") ? .35 : r === "ignore" || r === "paste" ? .4 : .78}); }
+      ctx.setTransform(...transformFor(false)); ctx.strokeStyle = "#FFFFFF"; ctx.lineWidth = 1.2 / (st.cam.s*dpr);
+      holes.forEach(l => ctx.stroke(paths(l).holes));
+      return;
+    }
+    const mirror = view === "bottom", side = mirror ? "bottom" : "top", m = MASK[$("mask").value].c;
+    if (an && an.bb){ ctx.setTransform(...transformFor(mirror)); ctx.fillStyle = m; const b = an.bb; ctx.fillRect(b[0], b[1], b[2] - b[0], b[3] - b[1]); }
+    // camada oposta, apenas como sombra através do laminado
+    L.filter(l => l.role === (mirror ? "top" : "bottom")).forEach(l => drawLayer(ctx, l, mirror, {line:"#000", flash:"#000", region:"#000", alpha:.12}));
+    const under = mix(m, "#D8C27A", .32), hasl = "#D5D8DC";
+    L.filter(l => l.role === side).forEach(l => drawLayer(ctx, l, mirror, {line:under, flash:hasl, region:under}));
+    L.filter(l => l.role === (mirror ? "silk_bot" : "silk_top")).forEach(l => drawLayer(ctx, l, mirror, {line:"#F4F4F0", flash:"#F4F4F0", region:"#F4F4F0"}));
+    ctx.setTransform(...transformFor(mirror));
+    holes.forEach(l => { const P = paths(l); ctx.fillStyle = "#0B1714"; ctx.fill(P.holes); });
+    L.filter(l => l.role === "outline").forEach(l => drawLayer(ctx, l, mirror, {line:"#E9D5B5", flash:"#E9D5B5", region:"#E9D5B5", alpha:.9}));
+  }
+  function fit(){
+    const el = $("viewer"), W = el.clientWidth, H = el.clientHeight, b = st.an && st.an.bb ? st.an.bb : [0, 0, 50, 30];
+    const w = Math.max(b[2] - b[0], 1), h = Math.max(b[3] - b[1], 1);
+    st.cam = {cx:(b[0] + b[2])/2, cy:(b[1] + b[3])/2, s:Math.min((W - 40)/w, (H - 70)/h), dpr:1};
+  }
+  let drag = null;
+  cv.addEventListener("pointerdown", e => { drag = {x:e.clientX, y:e.clientY, cx:st.cam.cx, cy:st.cam.cy}; cv.setPointerCapture(e.pointerId); });
+  cv.addEventListener("pointermove", e => { if (!drag) return; const k = st.cam, dx = (e.clientX - drag.x)/k.s, dy = (e.clientY - drag.y)/k.s; k.cx = drag.cx - (st.view === "bottom" ? -dx : dx); k.cy = drag.cy + dy; render(); });
+  cv.addEventListener("pointerup", () => drag = null);
+  cv.addEventListener("wheel", e => { e.preventDefault(); const k = st.cam, r = cv.getBoundingClientRect(), mx = e.clientX - r.left - r.width/2, my = e.clientY - r.top - r.height/2;
+    const z = Math.exp(-e.deltaY * 0.0015), sgn = st.view === "bottom" ? -1 : 1;
+    k.cx += sgn * mx / k.s * (1 - 1/z); k.cy -= my / k.s * (1 - 1/z); k.s *= z; render(); }, {passive:false});
+  cv.addEventListener("dblclick", () => { fit(); render(); });
+  $("vFit").addEventListener("click", () => { fit(); render(); });
+  document.querySelectorAll(".vtools [data-v]").forEach(b => b.addEventListener("click", () => {
+    st.view = b.dataset.v; document.querySelectorAll(".vtools [data-v]").forEach(x => x.setAttribute("aria-pressed", x === b)); fit(); render(); }));
+  new ResizeObserver(() => render()).observe($("viewer"));
+
+  // ================= tabela de camadas =================
+  function renderLayers(){
+    const tb = $("ltbody"); tb.innerHTML = "";
+    st.board.layers.forEach((l, i) => {
+      const tr = document.createElement("tr");
+      const opts = Object.entries(PCB.ROLES).map(([k, v]) => `<option value="${k}"${k === l.role ? " selected" : ""}>${v}</option>`).join("");
+      const count = l.role === "drill" ? l.holes.length + " furos" : l.prims.length + " elementos";
+      tr.innerHTML = `<td><span class="dot" style="background:${layerColor(l)}"></span></td><td class="nm" title="${l.name}">${l.name}<br><small style="color:var(--muted);font-family:var(--f-body)">${count}</small></td>
+        <td><select aria-label="Função de ${l.name}" data-i="${i}">${opts}</select></td><td><input type="checkbox" aria-label="Mostrar ${l.name}" data-v="${i}"${l.visible === false ? "" : " checked"}></td>`;
+      tb.appendChild(tr);
+    });
+    tb.querySelectorAll("select").forEach(s => s.addEventListener("change", () => { const l = st.board.layers[+s.dataset.i]; l.role = s.value;
+      if (s.value === "drill" && !l.holes.length){ /* um Gerber marcado como furação continua sem furos */ } recompute(); }));
+    tb.querySelectorAll("input[type=checkbox]").forEach(c => c.addEventListener("change", () => { st.board.layers[+c.dataset.v].visible = c.checked; render(); }));
+    $("lsrc").textContent = st.board.source === "Gerber" ? "Defina a função de cada arquivo" : "Camadas lidas do " + st.board.source + " · ajuste se precisar";
+  }
+
+  // ================= análise, DFM e preço =================
+  function detectedType(an){ return an.copper <= 1 ? "1F" : an.copper === 2 ? "2F" : an.copper <= 4 ? "4L" : null; }
+  function perPanel(w, h){
+    const fitN = (a, b) => Math.floor(PANEL.w / a) * Math.floor(PANEL.h / b);
+    return Math.max(fitN(w, h), fitN(h, w));
+  }
+  function quote(){
+    const an = st.an, q = intv("qty"), mode = $("mode").value, mk = $("mask").value;
+    const det = detectedType(an), sel = $("ptype").value, t = sel === "auto" ? det : sel;
+    $("ptypeInfo").textContent = det ? "Detectado no arquivo: " + TIPOS[det].n.toLowerCase() : "Detectado: " + an.copper + " camadas (sob consulta)";
+    const dfm = [];
+    const fits = an.w > 0 && ((an.w <= PANEL.w && an.h <= PANEL.h) || (an.w <= PANEL.h && an.h <= PANEL.w));
+    dfm.push(an.w ? (fits ? ["ok", `Placa de ${f1(an.w)} × ${f1(an.h)} mm cabe no painel de 200 × 100 mm`] : ["bad", `Placa de ${f1(an.w)} × ${f1(an.h)} mm passa de 200 × 100 mm: orçamento sob consulta`]) : ["bad", "Não encontrei o contorno nem o cobre da placa"]);
+    if (!an.usedOutline && an.w) dfm.push(["warn", "Sem camada de contorno: medidas tiradas do cobre. Marque o arquivo de contorno na tabela, se houver"]);
+    dfm.push(det ? ["ok", an.copper + (an.copper === 1 ? " camada" : " camadas") + " de cobre"] : ["bad", an.copper ? an.copper + " camadas de cobre: acima de 4, sob consulta" : "Nenhuma camada de cobre definida"]);
+    if (an.minTrack !== null) dfm.push(an.minTrack + 1e-6 >= DFM.trilha ? ["ok", `Trilha mínima ${f2(an.minTrack)} mm`] : ["warn", `Trilha de ${f2(an.minTrack)} mm abaixo de ${f2(DFM.trilha)} mm: será avaliada no DFM`]);
+    if (an.minDrill !== null) dfm.push(an.minDrill + 1e-6 >= DFM.furo ? ["ok", `Furo mínimo ${f2(an.minDrill)} mm`] : ["warn", `Furo de ${f2(an.minDrill)} mm abaixo de ${f2(DFM.furo)} mm: será avaliado no DFM`]);
+    if (!an.holes && t !== "1F") dfm.push(["warn", "Nenhum arquivo de furação encontrado. Inclua o .drl ou marque a função na tabela"]);
+    if (sel !== "auto" && det && sel !== det) dfm.push(["warn", `Tipo escolhido (${TIPOS[sel].n.toLowerCase()}) diferente do arquivo (${an.copper} camadas)`]);
+    $("dfm").innerHTML = dfm.map(([c, txt]) => `<li class="${c === "ok" ? "" : c}">${txt}</li>`).join("");
+    if (!t || !fits) return {err: !fits ? "Placa maior que 200 × 100 mm. Fale com a gente para um orçamento sob consulta." : "Mais de 4 camadas: orçamento sob consulta."};
+    const T = TIPOS[t], per = perPanel(an.w, an.h);
+    const urg = $("urg").checked && t !== "4L" && mode === "ded";
+    $("urg").disabled = t === "4L" || mode === "shr"; $("laudo1").disabled = t !== "1F";
+    let panels, setup, base, rows = [];
+    if (mode === "shr"){ panels = Math.max(SHARED_MIN, q / per); setup = 0; }
+    else { panels = Math.ceil(q / per); setup = T.setup; }
+    base = setup + panels * T.pp;
+    const furosTot = an.holes * q, inclusos = FUROS_POR_PAINEL * Math.ceil(panels), extra = Math.max(0, furosTot - inclusos), furoV = extra * FURO_EXTRA;
+    const laudo = t === "1F" && $("laudo1").checked ? LAUDO_1F : 0;
+    let total = base + furoV + laudo; const urgV = urg ? total * (URG - 1) : 0; total += urgV;
+    rows.push(["Tipo", T.n], ["Placas por painel", per + " (" + f1(an.w) + " × " + f1(an.h) + " mm)"],
+      ["Painéis", (mode === "shr" ? f2(panels) + " (fração, mín. 0,25)" : panels) + " × " + brl0(T.pp)]);
+    if (setup) rows.push(["Setup do lote", brl0(setup)]); else rows.push(["Setup", "sem setup no lote compartilhado"]);
+    rows.push(["Furos", furosTot.toLocaleString("pt-BR") + (extra ? " · " + extra.toLocaleString("pt-BR") + " excedentes = " + brl(furoV) : " · inclusos")]);
+    rows.push(["Laudo de continuidade", t === "1F" ? (laudo ? brl0(laudo) : "não incluído") : "incluído"], ["Máscara", MASK[mk].n]);
+    if (urg) rows.push(["Urgência 24–48 h", "+ " + brl(urgV)]);
+    let dias = mode === "shr" ? [SHARED_DIAS, SHARED_DIAS] : T.d.slice();
+    if (mk === "azulr" && !urg) dias = dias.map(d => Math.max(1, d - 1));
+    const eta = urg ? "24 a 48 h" : dias[0] === dias[1] ? dias[0] + " dias úteis" : dias[0] + " a " + dias[1] + " dias úteis";
+    const prodDias = urg ? 2 : dias[1];
+    return {price:total, q, t, eta, prodDias, rows, panels, per,
+      summary:{Servico:"PCB " + T.n, Arquivos:st.files.length ? st.files.map(f => f.name).join(", ") : "Exemplo do site", Origem_do_arquivo:st.board.source,
+        Dimensoes:f1(an.w) + " × " + f1(an.h) + " mm", Camadas_de_cobre:String(an.copper), Furos_por_placa:String(an.holes),
+        Trilha_minima:an.minTrack ? f2(an.minTrack) + " mm" : "—", Furo_minimo:an.minDrill ? f2(an.minDrill) + " mm" : "—",
+        Quantidade:String(q), Modalidade:mode === "shr" ? "Lote compartilhado" : "Lote dedicado", Paineis:mode === "shr" ? f2(panels) : String(panels),
+        Mascara:MASK[mk].n, Urgencia:urg ? "Sim" : "Não", Preco_estimado:brl(total), Prazo_de_producao:eta}};
+  }
+  function recompute(keepView){
+    st.board.layers.forEach(l => { delete l._p; });
+    st.an = PCB.analyze(st.board);
+    renderLayers();
+    const an = st.an;
+    $("fDims").textContent = an.w ? f1(an.w) + " × " + f1(an.h) + " mm" : "—";
+    $("fCu").textContent = an.copper || "—";
+    $("fHoles").textContent = an.holes ? an.holes.toLocaleString("pt-BR") + (an.holes !== an.plated ? " (" + (an.holes - an.plated) + " sem metalização)" : "") : "0";
+    $("fMin").textContent = (an.minTrack ? f2(an.minTrack) : "—") + " · " + (an.minDrill ? f2(an.minDrill) : "—") + " mm";
+    $("vdims").textContent = an.w ? f1(an.w) + " × " + f1(an.h) + " mm" : "";
+    if (!keepView){ st.cam = null; }
+    render(); price();
+  }
+  function price(){
+    const r = quote();
+    if (r.err){ st.last = null; $("qprice").textContent = "—"; $("qper").textContent = r.err; $("qrows").innerHTML = ""; $("qeta").textContent = "—"; renderFrete(); return; }
+    st.last = r;
+    $("qlabel").textContent = "Preço estimado · " + TIPOS[r.t].n.toLowerCase();
+    $("qprice").textContent = brl0(r.price);
+    $("qper").textContent = brl(r.price / r.q) + " por placa · " + r.q + (r.q > 1 ? " placas" : " placa");
+    $("qeta").textContent = r.eta;
+    $("qrows").innerHTML = r.rows.map(([a, b]) => `<div><span>${a}</span><b>${b}</b></div>`).join("");
+    renderFrete();
+  }
+  ["ptype", "qty", "mode", "urg", "laudo1"].forEach(id => $(id).addEventListener("input", price));
+  $("mask").addEventListener("input", () => { price(); render(); });
+
+  // ================= arquivos =================
+  async function handle(fileList){
+    const files = [...fileList]; if (!files.length) return;
+    const meta = $("filemeta"); meta.className = "filemeta"; meta.textContent = "Lendo " + (files.length > 1 ? files.length + " arquivos" : files[0].name) + "…";
+    try {
+      const b = await PCB.load(files);
+      if (!b.layers.length) throw new Error("nenhuma camada reconhecida");
+      st.board = b; st.files = files; st.view = "top";
+      document.querySelectorAll(".vtools [data-v]").forEach(x => x.setAttribute("aria-pressed", x.dataset.v === "top"));
+      $("vbadge").textContent = files.length > 1 ? files.length + " arquivos" : files[0].name;
+      recompute();
+      const nCu = st.an.copper, unk = b.layers.filter(l => l.role === "ignore").length;
+      meta.textContent = `${b.source}: ${b.layers.length} camadas lidas · ${nCu} de cobre` + (unk ? ` · ${unk} sem função reconhecida (ajuste na tabela)` : "") + (b.notes.length ? " · " + b.notes.join("; ") : "");
+    } catch(e){ meta.className = "filemeta err"; meta.textContent = "Não consegui ler: " + e.message + ". Envie o .zip de Gerbers com a furação, o .kicad_pcb ou o .brd."; }
+  }
+  $("file").addEventListener("change", e => { handle(e.target.files); e.target.value = ""; });
+  const drop = $("drop");
+  ["dragenter", "dragover"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add("over"); }));
+  ["dragleave", "drop"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove("over"); }));
+  drop.addEventListener("drop", e => handle(e.dataTransfer.files));
+
+
+  // ================= frete (Correios: SEDEX e SEDEX 10) =================
+  // Origem do envio: ajuste aqui o CEP da unidade que posta as encomendas.
+  const ORIGEM = {cep:"80010-020", cidade:"Curitiba/PR"};
+  const CURITIBA = [80000, 82999]; // faixa de CEP de Curitiba: única área com retirada no local
+  // Tabela Correios contrato (pacote Clube/Platinum, vigência 12/04/2025) + reajuste de 4,2643% de 12/04/2026.
+  // Faixas: até 0,3 / 0,5 / 1 / 2 / 3 / 4 / 5 / 6 / 7 / 8 / 9 / 10 kg; último valor = kg adicional.
+  const REAJ = 1.042643, KG = [0.3,0.5,1,2,3,4,5,6,7,8,9,10];
+  const TAB = {
+    sedex:{
+      L:[9.74,10.92,11.68,14.68,16.38,17.70,19.13,20.31,21.60,22.83,23.58,24.10,2.99],
+      E:[18.62,19.30,21.27,23.46,25.63,28.22,30.42,32.88,35.19,37.66,40.09,42.80,5.31],
+      N1:[27.67,28.83,29.99,36.15,42.21,48.39,53.41,58.56,64.61,70.77,76.96,83.14,10.31],
+      N2:[38.74,40.36,41.98,50.64,56.99,65.34,72.11,79.05,87.23,95.56,103.89,112.24,13.92],
+      N3:[49.81,51.88,53.99,65.10,80.21,91.95,101.49,111.27,122.76,134.50,146.22,157.97,19.59],
+      N4:[58.11,60.52,62.99,75.93,97.08,111.31,122.84,134.68,148.62,162.82,177.00,191.23,23.71],
+      P1:[36.84,37.81,38.78,48.50,58.13,63.32,76.57,80.92,86.00,95.71,100.89,106.10,13.16],
+      P2:[47.03,48.39,49.77,61.56,71.44,78.45,93.18,99.02,105.90,117.43,124.44,131.43,16.29],
+      P3:[56.78,58.54,60.30,74.17,91.38,101.27,118.32,126.54,136.20,150.60,160.45,170.30,21.12],
+      P4:[65.12,67.18,69.21,84.64,106.93,118.88,137.62,147.57,159.28,175.74,187.65,199.60,24.75],
+      I1:[43.86,45.00,46.18,57.74,69.19,75.37,91.17,96.31,102.39,113.93,120.11,126.30,15.66],
+      I2:[56.00,57.61,59.25,73.29,85.04,93.39,110.93,117.89,126.07,139.79,148.14,156.46,19.40],
+      I3:[67.61,69.69,71.79,88.29,108.79,120.56,140.85,150.63,162.13,179.28,191.01,202.74,25.14],
+      I4:[77.54,79.96,82.39,100.75,127.30,141.53,163.84,175.69,189.61,209.22,223.40,237.60,29.45]},
+    sedex10:{
+      L:[28.81,29.84,30.86,34.14,37.63,40.91,44.19,47.27,50.96,54.03,58.86,63.57,6.46],
+      E:[31.60,33.43,35.27,38.84,42.70,46.89,50.56,54.63,58.08,62.17,66.99,71.69,7.22],
+      N1:[45.60,48.70,51.79,62.04,72.94,83.30,94.19,104.67,115.13,125.60,136.92,148.02,14.64],
+      N2:[70.82,74.44,78.07,93.99,109.79,125.49,141.19,157.32,173.13,188.61,207.51,226.09,22.44],
+      N3:[86.14,90.59,95.06,114.65,133.98,153.48,172.81,192.51,211.89,231.23,252.80,274.32,27.18],
+      N4:[101.46,106.74,112.03,135.32,158.17,181.46,204.42,227.70,250.66,273.84,298.08,322.53,31.94],
+      P1:[58.66,60.74,62.80,75.63,88.73,101.91,114.83,127.67,140.39,153.13,168.12,183.10,18.31],
+      P2:[78.13,79.58,81.01,102.00,122.46,142.92,163.45,184.17,204.45,225.98,251.11,275.32,27.45],
+      P3:[90.57,92.25,93.94,119.33,144.53,169.64,194.68,220.02,244.95,270.61,299.10,327.05,32.47],
+      P4:[103.00,104.91,106.85,136.64,166.60,196.39,225.89,255.86,285.46,315.25,347.10,378.77,37.51],
+      I1:[69.85,72.30,74.75,90.03,105.63,121.33,136.70,151.98,167.15,182.31,200.15,217.98,21.79],
+      I2:[93.02,94.73,96.44,121.43,145.78,170.14,194.59,219.25,243.39,269.03,298.94,327.76,32.69],
+      I3:[107.81,109.83,111.83,142.05,172.05,201.95,231.76,261.93,291.62,322.16,356.07,389.34,38.67],
+      I4:[122.61,124.90,127.19,162.66,198.34,233.78,268.92,304.60,339.84,375.29,413.21,450.91,44.65]}
+  };
+  // faixas de CEP por estado e das capitais (aproximação para escolher a zona tarifária)
+  const UFR = [["SP",1000,19999],["RJ",20000,28999],["ES",29000,29999],["MG",30000,39999],["BA",40000,48999],["SE",49000,49999],["PE",50000,56999],["AL",57000,57999],
+    ["PB",58000,58999],["RN",59000,59999],["CE",60000,63999],["PI",64000,64999],["MA",65000,65999],["PA",66000,68899],["AP",68900,68999],["AM",69000,69299],["RR",69300,69399],
+    ["AM",69400,69899],["AC",69900,69999],["DF",70000,72799],["GO",72800,72999],["DF",73000,73699],["GO",73700,76799],["RO",76800,76999],["TO",77000,77999],["MT",78000,78899],
+    ["MS",79000,79999],["PR",80000,87999],["SC",88000,89999],["RS",90000,99999]];
+  const CAP = [[1000,5999],[8000,8499],[20000,23799],[29000,29099],[30000,31999],[40000,42599],[49000,49099],[50000,52999],[57000,57099],[58000,58099],[59000,59139],[60000,61599],
+    [64000,64099],[65000,65109],[66000,66999],[68900,68914],[69000,69099],[69300,69339],[69900,69924],[70000,72799],[74000,74899],[76800,76834],[77000,77270],[78000,78109],
+    [79000,79124],[80000,82999],[88000,88099],[90000,91999]];
+  const CAPXY = {AC:[-9.97,-67.81],AL:[-9.65,-35.73],AP:[0.03,-51.07],AM:[-3.12,-60.02],BA:[-12.97,-38.51],CE:[-3.72,-38.54],DF:[-15.79,-47.88],ES:[-20.32,-40.34],GO:[-16.68,-49.25],
+    MA:[-2.53,-44.30],MT:[-15.60,-56.10],MS:[-20.47,-54.62],MG:[-19.92,-43.94],PA:[-1.46,-48.50],PB:[-7.12,-34.86],PR:[-25.43,-49.27],PE:[-8.05,-34.88],PI:[-5.09,-42.80],
+    RJ:[-22.91,-43.17],RN:[-5.79,-35.21],RS:[-30.03,-51.23],RO:[-8.76,-63.90],RR:[2.82,-60.67],SC:[-27.60,-48.55],SP:[-23.55,-46.63],SE:[-10.91,-37.07],TO:[-10.18,-48.33]};
+  const cep5 = c => parseInt(String(c).replace(/\D/g, "").slice(0, 5), 10);
+  const ufOf = c => { const n = cep5(c); const r = UFR.find(([, a, b]) => n >= a && n <= b); return r ? r[0] : null; };
+  const isCap = c => { const n = cep5(c); return CAP.some(([a, b]) => n >= a && n <= b); };
+  const capRange = c => { const n = cep5(c); return CAP.findIndex(([a, b]) => n >= a && n <= b); };
+  function km(a, b){ const [la1, lo1] = CAPXY[a], [la2, lo2] = CAPXY[b], R = 6371, r = Math.PI/180;
+    const h = Math.sin((la2-la1)*r/2)**2 + Math.cos(la1*r)*Math.cos(la2*r)*Math.sin((lo2-lo1)*r/2)**2; return 2*R*Math.asin(Math.sqrt(h)); }
+  function zona(dest){
+    const uo = ufOf(ORIGEM.cep), ud = ufOf(dest); if (!ud) return null;
+    const co = isCap(ORIGEM.cep), cd = isCap(dest);
+    if (cep5(dest) === cep5(ORIGEM.cep) || (co && cd && capRange(dest) === capRange(ORIGEM.cep))) return {z:"L", txt:"local", uf:ud, cap:cd, d:0};
+    if (uo === ud) return {z:"E", txt:"estadual", uf:ud, cap:cd, d:0};
+    const d = km(uo, ud), band = d <= 700 ? 1 : d <= 1500 ? 2 : d <= 2500 ? 3 : 4;
+    const pre = (co && cd) ? "N" : (co || cd) ? "P" : "I";
+    return {z:pre + band, txt:"interestadual", uf:ud, cap:cd, d};
+  }
+  function tarifa(serv, z, kg){
+    const t = TAB[serv][z]; if (!t) return null;
+    let v; const i = KG.findIndex(k => kg <= k + 1e-9);
+    if (i >= 0) v = t[i]; else v = t[11] + Math.ceil(kg - 10) * t[12];
+    return v * REAJ;
+  }
+  const PRAZO_SEDEX = {L:1, E:1, N1:1, N2:2, N3:3, N4:4, P1:2, P2:3, P3:4, P4:5, I1:3, I2:4, I3:5, I4:6};
+  // pacote: dimensões em cm, peso real e cúbico (Correios: cúbico = C×L×A/6000, considerado acima de 5 kg)
+  function pacote(){ // placas FR-4 1,6 mm (1,85 g/cm³) em caixa com folga de 2 cm por lado
+    const an = st.an, q = intv("qty");
+    const massa = an.w * an.h * 1.6 / 1000 * 1.85 / 1000 * q;
+    let dims = [Math.max(an.w, an.h)/10 + 4, Math.min(an.w, an.h)/10 + 4, 0.16*q + 3].sort((a, b) => b - a);
+    dims[0] = Math.max(dims[0], 16); dims[1] = Math.max(dims[1], 11); dims[2] = Math.max(dims[2], 2);
+    const real = massa * 1.1 + 0.15, cub = dims[0] * dims[1] * dims[2] / 6000;
+    const peso = cub > 5 ? Math.max(real, cub) : real;
+    return {dims, real, cub, peso, fora:dims[0] > 100 || dims[0] + dims[1] + dims[2] > 200 || peso > 30};
+  }
+  function frete(){
+    const cep = $("cep").value.replace(/\D/g, "");
+    if (cep.length !== 8) return {state:"vazio"};
+    const z = zona(cep); if (!z) return {state:"erro", msg:"CEP não reconhecido. Confira os 8 dígitos."};
+    const pk = pacote();
+    if (pk.fora) return {state:"erro", msg:"O pacote passa dos limites dos Correios (100 cm de lado, 200 cm na soma ou 30 kg). Frete sob consulta."};
+    const ctb = cep5(cep) >= CURITIBA[0] && cep5(cep) <= CURITIBA[1];
+    const opts = [ctb ? {id:"retirada", n:"Retirada em Curitiba", v:0, prazo:"no Centro, no dia em que ficar pronta"}
+                      : {id:"retirada", n:"Retirada no local", v:null, prazo:"somente para endereços em Curitiba"}];
+    const ps = tarifa("sedex", z.z, pk.peso), d1 = PRAZO_SEDEX[z.z];
+    opts.push({id:"sedex", n:"SEDEX", v:ps, prazo:(d1 === 1 ? "1 dia útil" : d1 + " dias úteis") + " após a postagem", dias:d1});
+    const s10ok = pk.peso <= 10 && (z.z === "L" || z.z === "E" ? true : z.cap);
+    if (s10ok) opts.push({id:"sedex10", n:"SEDEX 10", v:tarifa("sedex10", z.z, pk.peso), prazo:"até 10h do dia útil seguinte à postagem", dias:1});
+    else opts.push({id:"sedex10", n:"SEDEX 10", v:null, prazo:pk.peso > 10 ? "indisponível acima de 10 kg" : "indisponível para este CEP (atende capitais e cidades selecionadas)"});
+    return {state:"ok", z, pk, opts};
+  }
+  let freteSel = "sedex10";
+  function renderFrete(){
+    const out = $("freteOpts"), f = frete(), box = $("freteInfo");
+    st.frete = null;
+    if (f.state === "vazio"){ out.innerHTML = ""; box.textContent = "Informe o CEP de entrega para ver retirada, SEDEX e SEDEX 10."; renderTotal(); return; }
+    if (f.state === "erro"){ out.innerHTML = ""; box.textContent = f.msg; renderTotal(); return; }
+    const avail = f.opts.filter(o => o.v !== null);
+    if (!avail.some(o => o.id === freteSel)) freteSel = avail.find(o => o.id === "sedex") ? "sedex" : "retirada";
+    out.innerHTML = f.opts.map(o => `<label class="fopt${o.v === null ? " off" : ""}"><input type="radio" name="frete" value="${o.id}"${o.id === freteSel ? " checked" : ""}${o.v === null ? " disabled" : ""}>
+      <span class="fn">${o.n}<small>${o.prazo}</small></span><b class="num">${o.v === null ? "—" : o.v === 0 ? "grátis" : brl(o.v)}</b></label>`).join("");
+    out.querySelectorAll("input").forEach(i => i.addEventListener("change", () => { freteSel = i.value; renderTotal(); }));
+    const pk = f.pk;
+    box.textContent = `${f.z.uf} · zona ${f.z.txt}${f.z.cap ? " (capital)" : ""} · pacote ${pk.dims.map(v => Math.round(v)).join(" × ")} cm · ${pk.peso.toLocaleString("pt-BR", {maximumFractionDigits:2})} kg`;
+    st.frete = f; renderTotal();
+  }
+  function renderTotal(){
+    const t = $("qtotal");
+    if (!st.last || !st.frete){ t.hidden = true; return; }
+    const o = st.frete.opts.find(x => x.id === freteSel); if (!o || o.v === null){ t.hidden = true; return; }
+    t.hidden = false;
+    $("qtotalv").textContent = brl(st.last.price + o.v);
+    const eta = o.dias ? "até " + (st.last.prodDias + o.dias) + " dias úteis" : st.last.eta;
+    $("qtotaleta").textContent = o.id === "retirada" ? "Retirada após a produção: " + st.last.eta : "Entrega estimada: " + eta + " (produção + " + o.n + ")";
+  }
+  function freteResumo(){
+    if (!st.frete) return {Entrega:"CEP não informado"};
+    const o = st.frete.opts.find(x => x.id === freteSel);
+    return {CEP_de_entrega:$("cep").value, Entrega:o ? o.n + (o.v ? " · " + brl(o.v) : "") + " · " + o.prazo : "—",
+      Pacote:st.frete.pk.dims.map(v => Math.round(v)).join(" × ") + " cm · " + st.frete.pk.peso.toLocaleString("pt-BR", {maximumFractionDigits:2}) + " kg",
+      Total_com_frete:o && o.v !== null ? brl(st.last.price + o.v) : "—"};
+  }
+  $("cep").addEventListener("input", e => { let v = e.target.value.replace(/\D/g, "").slice(0, 8); if (v.length > 5) v = v.slice(0, 5) + "-" + v.slice(5); e.target.value = v; renderFrete(); });
+
+
+  // ================= envio por e-mail =================
+  function mailtoLink(subject, body){ return "mailto:" + EMAIL + "?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body); }
+  async function sendMail(fields, files, out, btn){
+    const base = out.id === "formmsg" ? "formmsg" : "sendmsg", subject = fields._subject;
+    const body = Object.entries(fields).filter(([k]) => !k.startsWith("_")).map(([k, v]) => k.replace(/_/g, " ") + ": " + v).join("\n");
+    btn.disabled = true; const old = btn.textContent; btn.textContent = "Enviando…"; out.className = base;
+    try {
+      const fd = new FormData(); Object.entries(fields).forEach(([k, v]) => fd.append(k, v));
+      fd.append("_template", "table"); fd.append("_captcha", "false");
+      (files || []).forEach(f => fd.append("attachment", f, f.name));
+      const res = await fetch("https://formsubmit.co/ajax/" + EMAIL, {method:"POST", body:fd, headers:{"Accept":"application/json"}});
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok || String(j.success) !== "true") throw new Error(j.message || "falha no envio");
+      out.textContent = "Orçamento enviado. Respondemos com a revisão de DFM em até 1 dia útil.";
+    } catch(e){
+      out.className = base + " warn";
+      const names = (files || []).map(f => f.name).join(", ");
+      out.innerHTML = `Não foi possível enviar daqui. <a href="${mailtoLink(subject, body + (names ? "\n\n(anexe: " + names + ")" : ""))}">Abra o e-mail com o orçamento preenchido</a> ou escreva para <b>${EMAIL}</b>` + (names ? " anexando os arquivos." : ".");
+    } finally { btn.disabled = false; btn.textContent = old; }
+  }
+  $("sendForm").addEventListener("submit", e => {
+    e.preventDefault();
+    const out = $("sendmsg"), n = $("sn").value.trim(), em = $("se").value.trim();
+    if (!n || !/^\S+@\S+\.\S+$/.test(em)){ out.className = "sendmsg warn"; out.textContent = "Preencha nome e um e-mail válido."; return; }
+    if (!st.last){ out.className = "sendmsg warn"; out.textContent = "A placa precisa de um orçamento válido antes do envio."; return; }
+    const fields = Object.assign({_subject:"Orçamento VIA72 – " + st.last.summary.Servico + " – " + n, _replyto:em, Nome:n, Email:em, Empresa:$("sc").value.trim() || "—", WhatsApp:$("sp").value.trim() || "—", Observacoes:$("so").value.trim() || "—"}, st.last.summary, freteResumo());
+    sendMail(fields, st.files, out, $("sendBtn"));
+  });
+  $("cform").addEventListener("submit", e => {
+    e.preventDefault();
+    const out = $("formmsg"), n = $("cn").value.trim(), em = $("ce").value.trim();
+    if (!n || !/^\S+@\S+\.\S+$/.test(em)){ out.className = "formmsg warn"; out.textContent = "Preencha nome e um e-mail válido."; return; }
+    sendMail({_subject:"Contato VIA72 – " + $("ct").value + " – " + n, _replyto:em, Nome:n, Email:em, Empresa:$("cc").value || "—", Assunto:$("ct").value, Mensagem:$("cm").value || "—"}, null, out, $("cform").querySelector("button[type=submit]"));
+  });
+
+  // ================= início =================
+  st.board = exampleBoard();
+  $("filemeta").textContent = "Mostrando uma placa de exemplo (dupla face, 54 × 34 mm). Envie seus arquivos para calcular.";
+  recompute();
+})();
+
+// ================= animação de abertura: trilhas sendo roteadas =================
+(function(){
+  const cv = document.getElementById("route"), ctx = cv.getContext("2d"), W = cv.width, H = cv.height, G = 28;
+  const cols = Math.floor(W / G) - 1, rows = Math.floor(H / G) - 2;
+  let nets = [], total = 0;
+  function rnd(n){ return Math.floor(Math.random() * n); }
+  function build(){
+    nets = []; const used = new Set();
+    for (let i = 0; i < 18; i++){
+      const a = [1 + rnd(cols - 1), 1 + rnd(rows - 1)], b = [1 + rnd(cols - 1), 1 + rnd(rows - 1)];
+      if (used.has(a + "") || used.has(b + "") || (a[0] === b[0] && a[1] === b[1])) continue; used.add(a + ""); used.add(b + "");
+      const dx = b[0] - a[0], dy = b[1] - a[1], d = Math.min(Math.abs(dx), Math.abs(dy)), sx = Math.sign(dx), sy = Math.sign(dy);
+      const p0 = [a[0]*G, a[1]*G], p1 = [(a[0] + (dx - sx*d))*G, a[1]*G], p2 = [b[0]*G, b[1]*G];
+      const pts = [p0, p1, p2], len = Math.hypot(p1[0]-p0[0], p1[1]-p0[1]) + Math.hypot(p2[0]-p1[0], p2[1]-p1[1]);
+      nets.push({pts, len, via:Math.random() < .35});
+    }
+    total = nets.length; document.getElementById("rT").textContent = total;
+  }
+  function frame(p){
+    ctx.fillStyle = "#0F5B4A"; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = "rgba(255,255,255,.05)";
+    for (let x = G; x < W; x += G) for (let y = G; y < H - G/2; y += G) ctx.fillRect(x - 1, y - 1, 2, 2);
+    const per = 1 / total; let done = 0;
+    nets.forEach((n, i) => {
+      const t = Math.max(0, Math.min(1, (p - i*per*0.85) / (per*1.6)));
+      for (const q of [n.pts[0], n.pts[2]]){ ctx.fillStyle = "#C8743A"; ctx.beginPath(); ctx.arc(q[0], q[1], 6, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = "#0F5B4A"; ctx.beginPath(); ctx.arc(q[0], q[1], 2.4, 0, Math.PI*2); ctx.fill(); }
+      if (t <= 0) return;
+      let rem = n.len * t; ctx.strokeStyle = "#C8743A"; ctx.lineWidth = 4; ctx.lineCap = "round"; ctx.lineJoin = "round";
+      ctx.beginPath(); ctx.moveTo(n.pts[0][0], n.pts[0][1]); let head = n.pts[0];
+      for (let k = 1; k < 3 && rem > 0; k++){ const a = n.pts[k-1], b = n.pts[k], L = Math.hypot(b[0]-a[0], b[1]-a[1]), u = Math.min(1, rem / (L || 1)); head = [a[0] + (b[0]-a[0])*u, a[1] + (b[1]-a[1])*u]; ctx.lineTo(head[0], head[1]); rem -= L; }
+      ctx.stroke();
+      if (t < 1){ ctx.save(); ctx.shadowColor = "rgba(240,177,132,.95)"; ctx.shadowBlur = 16; ctx.fillStyle = "#F0B184"; ctx.beginPath(); ctx.arc(head[0], head[1], 4, 0, Math.PI*2); ctx.fill(); ctx.restore(); }
+      else done++;
+    });
+    document.getElementById("rN").textContent = done;
+  }
+  build();
+  const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduce){ frame(1); return; }
+  frame(0.6);
+  let t0 = null; const dur = 9000, hold = 1800;
+  function loop(ts){ if (t0 === null) t0 = ts - dur*0.6; let e = ts - t0; if (e > dur + hold){ t0 = ts; e = 0; build(); } frame(Math.min(e / dur, 1)); requestAnimationFrame(loop); }
+  requestAnimationFrame(loop);
+})();
+
+</script>
+</body>
+</html>
